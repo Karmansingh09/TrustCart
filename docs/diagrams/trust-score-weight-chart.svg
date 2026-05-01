@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="380" viewBox="0 0 980 380" role="img" aria-labelledby="title desc">
+  <title id="title">Trust Score Weight Chart</title>
+  <desc id="desc">Seller rating is weighted 40 percent, price anomaly 30 percent, review count 20 percent, and product history 10 percent.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#08111f"/>
+      <stop offset="1" stop-color="#18212f"/>
+    </linearGradient>
+    <linearGradient id="bar1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#86efac"/>
+    </linearGradient>
+    <linearGradient id="bar2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#bae6fd"/>
+    </linearGradient>
+    <linearGradient id="bar3" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#ddd6fe"/>
+    </linearGradient>
+    <linearGradient id="bar4" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="380" rx="28" fill="url(#bg)"/>
+  <text x="40" y="56" fill="#f8fafc" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="28" font-weight="800">Trust Score Weight Chart</text>
+  <text x="40" y="86" fill="#cbd5e1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15">How each product signal contributes to the final score</text>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <text x="62" y="146" fill="#e2e8f0" font-size="16" font-weight="800">Seller Rating</text>
+    <rect x="250" y="124" width="600" height="32" rx="16" fill="#1f2937"/>
+    <rect x="250" y="124" width="480" height="32" rx="16" fill="url(#bar1)"/>
+    <text x="875" y="147" fill="#bbf7d0" font-size="18" font-weight="900">40%</text>
+
+    <text x="62" y="206" fill="#e2e8f0" font-size="16" font-weight="800">Price Anomaly</text>
+    <rect x="250" y="184" width="600" height="32" rx="16" fill="#1f2937"/>
+    <rect x="250" y="184" width="360" height="32" rx="16" fill="url(#bar2)"/>
+    <text x="875" y="207" fill="#bae6fd" font-size="18" font-weight="900">30%</text>
+
+    <text x="62" y="266" fill="#e2e8f0" font-size="16" font-weight="800">Review Count</text>
+    <rect x="250" y="244" width="600" height="32" rx="16" fill="#1f2937"/>
+    <rect x="250" y="244" width="240" height="32" rx="16" fill="url(#bar3)"/>
+    <text x="875" y="267" fill="#ddd6fe" font-size="18" font-weight="900">20%</text>
+
+    <text x="62" y="326" fill="#e2e8f0" font-size="16" font-weight="800">Product History</text>
+    <rect x="250" y="304" width="600" height="32" rx="16" fill="#1f2937"/>
+    <rect x="250" y="304" width="120" height="32" rx="16" fill="url(#bar4)"/>
+    <text x="875" y="327" fill="#fde68a" font-size="18" font-weight="900">10%</text>
+  </g>
+</svg>
