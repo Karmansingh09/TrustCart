@@ -1,25 +1,32 @@
 import './App.css';
 import TrustBadge from './components/TrustBadge';
+import calculateTrustScore from './utils/calculateTrustScore';
 
 function App() {
   const products = [
     {
       id: 1,
       name: 'Zenphone Pro',
-      price: '$899',
-      trustScore: 85,
+      price: 899,
+      averagePrice: 950,
+      sellerRating: 4.8,
+      reviews: 124,
     },
     {
       id: 2,
       name: 'AirSound Pods',
-      price: '$149',
-      trustScore: 68,
+      price: 149,
+      averagePrice: 190,
+      sellerRating: 2.8,
+      reviews: 54,
     },
     {
       id: 3,
       name: 'FitTrack Watch',
-      price: '$79',
-      trustScore: 42,
+      price: 79,
+      averagePrice: 180,
+      sellerRating: 2.4,
+      reviews: 11,
     },
   ];
 
@@ -33,29 +40,33 @@ function App() {
         </div>
 
         <div className="products-grid">
-          {products.map((product) => (
-            <article className="product-card" key={product.id}>
-              <TrustBadge trustScore={product.trustScore} />
+          {products.map((product) => {
+            const trustScore = calculateTrustScore(product);
 
-              <div className="product-image" aria-hidden="true">
-                <span>{product.name.charAt(0)}</span>
-              </div>
+            return (
+              <article className="product-card" key={product.id}>
+                <TrustBadge trustScore={trustScore} />
 
-              <div className="product-info">
-                <p className="product-category">Verified product</p>
-                <h2>{product.name}</h2>
-
-                <div className="price-row">
-                  <span>Price</span>
-                  <strong>{product.price}</strong>
+                <div className="product-image" aria-hidden="true">
+                  <span>{product.name.charAt(0)}</span>
                 </div>
 
-                <button className="cart-button" type="button">
-                  Add to cart
-                </button>
-              </div>
-            </article>
-          ))}
+                <div className="product-info">
+                  <p className="product-category">Verified product</p>
+                  <h2>{product.name}</h2>
+
+                  <div className="price-row">
+                    <span>Price</span>
+                    <strong>${product.price}</strong>
+                  </div>
+
+                  <button className="cart-button" type="button">
+                    Add to cart
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>
