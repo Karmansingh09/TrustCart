@@ -3,7 +3,7 @@ import calculateTrustScore from './calculateTrustScore';
 test('returns 100 for a trusted product', () => {
   const product = {
     price: 900,
-    averagePrice: 1000,
+    avgPrice: 1000,
     sellerRating: 4.5,
     reviews: 120,
   };
@@ -14,7 +14,7 @@ test('returns 100 for a trusted product', () => {
 test('reduces score for low price, low seller rating, and low reviews', () => {
   const product = {
     price: 400,
-    averagePrice: 1000,
+    avgPrice: 1000,
     sellerRating: 2.5,
     reviews: 8,
   };
@@ -25,7 +25,7 @@ test('reduces score for low price, low seller rating, and low reviews', () => {
 test('keeps score between 0 and 100', () => {
   const product = {
     price: 0,
-    averagePrice: 1000,
+    avgPrice: 1000,
     sellerRating: 1,
     reviews: 0,
   };

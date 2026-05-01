@@ -1,7 +1,8 @@
 function calculateTrustScore(product) {
   let score = 100;
+  const averagePrice = product.avgPrice || product.averagePrice;
 
-  if (product.price < product.averagePrice * 0.7) {
+  if (product.price < averagePrice * 0.7) {
     score -= 30;
   }
 

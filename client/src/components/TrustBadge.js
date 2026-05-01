@@ -1,13 +1,16 @@
 function TrustBadge({ trustScore }) {
   let label = 'Risky';
   let backgroundColor = '#e74c3c';
+  let glowColor = 'rgba(231, 76, 60, 0.45)';
 
   if (trustScore >= 80) {
     label = 'Safe';
     backgroundColor = '#2ecc71';
+    glowColor = 'rgba(46, 204, 113, 0.45)';
   } else if (trustScore >= 50) {
     label = 'Medium';
     backgroundColor = '#f39c12';
+    glowColor = 'rgba(243, 156, 18, 0.45)';
   }
 
   const badgeStyle = {
@@ -21,7 +24,7 @@ function TrustBadge({ trustScore }) {
     borderRadius: '999px',
     fontSize: '14px',
     fontWeight: '700',
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.2)',
+    boxShadow: `0 0 18px ${glowColor}, 0 8px 16px rgba(0, 0, 0, 0.22)`,
   };
 
   return <span style={badgeStyle}>{label} ({trustScore})</span>;
