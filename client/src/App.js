@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import './App.css';
 import TrustBadge from './components/TrustBadge';
 import calculateTrustScore from './utils/calculateTrustScore';
@@ -7,63 +7,98 @@ const products = [
   {
     id: 1,
     name: 'Zenphone Pro',
+    category: 'Phones',
     price: 899,
     avgPrice: 950,
     sellerRating: 4.8,
     reviews: 124,
+    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80',
+    description: 'A premium everyday flagship with all-day battery and verified seller history.',
   },
   {
     id: 2,
     name: 'AirSound Pods',
+    category: 'Audio',
     price: 149,
     avgPrice: 190,
     sellerRating: 2.8,
     reviews: 54,
+    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=80',
+    description: 'Wireless earbuds with active noise reduction and a medium seller risk profile.',
   },
   {
     id: 3,
     name: 'FitTrack Watch',
+    category: 'Wearables',
     price: 79,
     avgPrice: 180,
     sellerRating: 2.4,
     reviews: 11,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+    description: 'A low-priced wearable with suspicious pricing and limited review history.',
   },
   {
     id: 4,
     name: 'NovaBook Air',
+    category: 'Laptops',
     price: 1199,
     avgPrice: 1250,
     sellerRating: 4.7,
     reviews: 89,
+    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+    description: 'A thin laptop from a highly rated seller with a strong TrustCart score.',
   },
   {
     id: 5,
     name: 'PixelBuds Lite',
+    category: 'Audio',
     price: 39,
     avgPrice: 110,
     sellerRating: 3.7,
     reviews: 8,
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
+    description: 'Budget earbuds with low reviews and a price far below the usual market range.',
   },
   {
     id: 6,
     name: 'HomeCam Secure',
+    category: 'Smart Home',
     price: 129,
     avgPrice: 150,
     sellerRating: 4.2,
     reviews: 33,
+    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=900&q=80',
+    description: 'A compact home camera with stable seller signals and enough buyer feedback.',
   },
 ];
 
 const filters = ['All', 'Safe', 'Medium', 'Risky'];
-const steps = [
-  'Homepage',
-  'Search / Explore',
-  'Product Listing',
-  'Product Detail',
-  'Trust Score',
-  'Decision',
-  'Checkout',
-  'Order Placed',
+
+const engineCards = [
+  {
+    number: '01',
+    label: 'ANALYZE',
+    title: 'Fake Product Signals',
+    description: 'TrustCart scans suspicious pricing, seller rating drops, and low-review listings.',
+    tag: 'SCAN: ACTIVE',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    number: '02',
+    label: 'SCORE',
+    title: 'Trust Score Engine',
+    description: 'Every product receives a simple safety score before the buyer reaches checkout.',
+    tag: 'MODEL: TRUST',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=700&q=80',
+  },
+  {
+    number: '03',
+    label: 'WARN',
+    title: 'Buyer Risk Alerts',
+    description: 'Safe, medium, and risky product states help shoppers decide what to do next.',
+    tag: 'ALERTS: LIVE',
+    image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=700&q=80',
+  },
 ];
 
 function getTrustLabel(score) {
@@ -78,141 +113,161 @@ function getTrustLabel(score) {
   return 'Risky';
 }
 
-function StepProgress({ currentStep }) {
+function getTrustMessage(score) {
+  if (score >= 80) {
+    return 'Recommended to buy';
+  }
+
+  if (score >= 50) {
+    return 'Review seller details';
+  }
+
+  return 'Suspicious product detected';
+}
+
+function Header({ cartCount }) {
   return (
-    <div className="step-progress" aria-label="Shopping flow progress">
-      {steps.map((step, index) => (
-        <span className={index <= currentStep ? 'step-pill active' : 'step-pill'} key={step}>
-          {index + 1}. {step}
-        </span>
-      ))}
-    </div>
+    <header className="site-header">
+      <a className="brand" href="#home">TrustCart</a>
+      <nav className="nav-links" aria-label="Primary navigation">
+        <a href="#engine">Engine</a>
+        <a href="#products">Products</a>
+        <a href="#details">Trust Review</a>
+      </nav>
+      <a className="cart-link" href="#products">Cart ({cartCount})</a>
+    </header>
   );
 }
 
-function ProductCard({ product, onSelect }) {
+function Hero({ featuredProduct, onAddToCart }) {
+  const trustScore = calculateTrustScore(featuredProduct);
+
+  return (
+    <section className="hero-section" id="home">
+      <div className="hero-copy">
+        <p className="mono-label">Verified ecommerce intelligence</p>
+        <h1>Shop smarter. Avoid risky products.</h1>
+        <p>
+          TrustCart blends a premium storefront with real-time product risk scoring, so every
+          purchase feels clearer before checkout.
+        </p>
+        <div className="hero-actions">
+          <a className="primary-link" href="#products">Explore Products</a>
+          <a className="secondary-link" href="#engine">View Trust Engine</a>
+        </div>
+      </div>
+
+      <article className="hero-product">
+        <TrustBadge trustScore={trustScore} />
+        <div className="hero-product-image" style={{ backgroundImage: `url('${featuredProduct.image}')` }} />
+        <div className="hero-product-content">
+          <p className="mono-label">Featured verified pick</p>
+          <h2>{featuredProduct.name}</h2>
+          <p>{featuredProduct.description}</p>
+          <div className="hero-price-row">
+            <strong>${featuredProduct.price}</strong>
+            <button className="primary-button" onClick={() => onAddToCart(featuredProduct)} type="button">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function TrustEngineSection() {
+  return (
+    <section className="engine-section" id="engine" aria-label="TrustCart AI trust engine">
+      <div className="engine-header">
+        <div>
+          <span>02 // ENGINE</span>
+          <h2>AI-Driven Trust Infrastructure</h2>
+        </div>
+        <div className="engine-status">
+          STATUS: ONLINE
+          <br />
+          SYS.VER: 1.0.0
+        </div>
+      </div>
+
+      <div className="engine-grid">
+        {engineCards.map((card) => (
+          <article className="engine-card" key={card.label}>
+            <div className="engine-card-label">
+              <span>{card.number}</span> {card.label}
+            </div>
+            <h3>{card.title}</h3>
+            <p>{card.description}</p>
+            <div className="engine-image" style={{ backgroundImage: `url('${card.image}')` }}>
+              <span>{card.tag}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProductCard({ product, onSelect, onAddToCart }) {
   const trustScore = calculateTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
 
   return (
     <article className="product-card">
       <TrustBadge trustScore={trustScore} />
-
-      <div className="product-visual" aria-hidden="true">
-        <span>{product.name.charAt(0)}</span>
-      </div>
+      <button className="product-image-button" onClick={() => onSelect(product)} type="button">
+        <span className="sr-only">View {product.name}</span>
+        <span className="product-image" style={{ backgroundImage: `url('${product.image}')` }} />
+      </button>
 
       <div className="product-content">
-        <p className="product-eyebrow">TrustCart verified</p>
-        <h2>{product.name}</h2>
+        <p className="mono-label">{product.category}</p>
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
 
-        <div className="product-details">
+        <div className="product-meta">
           <div>
             <span>Price</span>
             <strong>${product.price}</strong>
           </div>
           <div>
-            <span>Reviews</span>
-            <strong>{product.reviews}</strong>
+            <span>Trust</span>
+            <strong>{trustScore}/100</strong>
           </div>
         </div>
 
         {trustLabel === 'Risky' && <p className="warning-text">⚠️ Suspicious product detected</p>}
 
-        <button className="primary-button" onClick={() => onSelect(product)} type="button">
-          Select Product
-        </button>
+        <div className="card-actions">
+          <button className="secondary-button" onClick={() => onSelect(product)} type="button">
+            Details
+          </button>
+          <button className="primary-button" onClick={() => onAddToCart(product)} type="button">
+            Add to Cart
+          </button>
+        </div>
       </div>
     </article>
   );
 }
 
-function HomePage({ onStart }) {
+function ProductCatalog({ selectedFilter, setSelectedFilter, sortBy, setSortBy, productsToShow, onSelect, onAddToCart }) {
   return (
-    <section className="hero-page">
-      <div className="hero-copy">
-        <p className="page-kicker">TrustCart marketplace</p>
-        <h1>Shop with Confidence</h1>
-        <p>We detect risky products before you buy, then guide you through each purchase step.</p>
-        <button className="primary-button hero-button" onClick={onStart} type="button">
-          Start Shopping
-        </button>
+    <section className="catalog-section" id="products">
+      <div className="section-heading">
+        <p className="mono-label">Shop verified products</p>
+        <h2>Product catalog</h2>
+        <p>Filter by trust level, sort by price or score, and inspect each product before buying.</p>
       </div>
 
-      <div className="hero-panel" aria-hidden="true">
-        <div className="score-orbit">
-          <span>Safe</span>
-          <strong>100</strong>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SearchExplorePage({ onContinue }) {
-  return (
-    <section className="flow-card narrow">
-      <p className="page-kicker">Search / Explore Products</p>
-      <h1>What are you looking for?</h1>
-      <p>Search by product, seller, or category. For now, continue to explore dummy products.</p>
-
-      <form className="search-box" onSubmit={(event) => event.preventDefault()}>
-        <input type="search" placeholder="Search phones, earbuds, watches..." />
-        <button className="primary-button" onClick={onContinue} type="button">
-          Explore Products
-        </button>
-      </form>
-    </section>
-  );
-}
-
-function ProductListingPage({ onSelectProduct }) {
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('price');
-
-  const productsWithScores = products.map((product) => {
-    const trustScore = calculateTrustScore(product);
-
-    return {
-      ...product,
-      trustScore,
-      trustLabel: getTrustLabel(trustScore),
-    };
-  });
-
-  const filteredProducts = productsWithScores.filter((product) => {
-    if (activeFilter === 'All') {
-      return true;
-    }
-
-    return product.trustLabel === activeFilter;
-  });
-
-  const sortedProducts = [...filteredProducts].sort((firstProduct, secondProduct) => {
-    if (sortBy === 'trust') {
-      return secondProduct.trustScore - firstProduct.trustScore;
-    }
-
-    return firstProduct.price - secondProduct.price;
-  });
-
-  return (
-    <section className="listing-page">
-      <header className="page-header">
-        <div>
-          <p className="page-kicker">Product Listing Page</p>
-          <h1>Select a product</h1>
-          <p>Filter and sort products, then select one to view its detail page.</p>
-        </div>
-      </header>
-
-      <section className="toolbar" aria-label="Product filters and sorting">
+      <div className="catalog-toolbar">
         <div className="filter-group" aria-label="Filter products">
           {filters.map((filter) => (
             <button
-              className={activeFilter === filter ? 'filter-button active' : 'filter-button'}
+              className={selectedFilter === filter ? 'filter-button active' : 'filter-button'}
               key={filter}
-              onClick={() => setActiveFilter(filter)}
+              onClick={() => setSelectedFilter(filter)}
               type="button"
             >
               {filter}
@@ -221,207 +276,141 @@ function ProductListingPage({ onSelectProduct }) {
         </div>
 
         <label className="sort-control">
-          Sort products
+          Sort
           <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+            <option value="featured">Featured</option>
             <option value="price">Price: Low to High</option>
             <option value="trust">Trust Score: High to Low</option>
           </select>
         </label>
-      </section>
+      </div>
 
-      <section className="products-grid" aria-label="Product results">
-        {sortedProducts.map((product) => (
-          <ProductCard product={product} key={product.id} onSelect={onSelectProduct} />
+      <div className="products-grid" aria-label="Product results">
+        {productsToShow.map((product) => (
+          <ProductCard
+            key={product.id}
+            onAddToCart={onAddToCart}
+            onSelect={onSelect}
+            product={product}
+          />
         ))}
-      </section>
-    </section>
-  );
-}
-
-function ProductDetailPage({ product, onCalculate }) {
-  return (
-    <section className="flow-card product-detail-card">
-      <p className="page-kicker">Product Detail Page</p>
-      <h1>{product.name}</h1>
-      <p>Review the product signals before TrustCart calculates its safety score.</p>
-
-      <div className="detail-grid">
-        <div>
-          <span>Product Price</span>
-          <strong>${product.price}</strong>
-        </div>
-        <div>
-          <span>Average Price</span>
-          <strong>${product.avgPrice}</strong>
-        </div>
-        <div>
-          <span>Seller Rating</span>
-          <strong>{product.sellerRating}/5</strong>
-        </div>
-        <div>
-          <span>Reviews</span>
-          <strong>{product.reviews}</strong>
-        </div>
       </div>
-
-      <button className="primary-button" onClick={onCalculate} type="button">
-        Calculate Trust Score
-      </button>
     </section>
   );
 }
 
-function TrustScorePage({ product, onContinue }) {
+function ProductDetail({ product, onAddToCart }) {
   const trustScore = calculateTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
 
   return (
-    <section className="flow-card product-detail-card">
-      <p className="page-kicker">Trust Score Calculation</p>
-      <h1>{trustLabel} product signal</h1>
-
-      <div className="score-result">
+    <section className="detail-section" id="details" aria-label="Selected product trust review">
+      <div className="detail-media" style={{ backgroundImage: `url('${product.image}')` }}>
         <TrustBadge trustScore={trustScore} />
-        <strong>{trustScore}/100</strong>
-        <span>{product.name}</span>
       </div>
 
-      <div className="detail-grid">
-        <div>
-          <span>Price vs Average</span>
-          <strong>{product.price < product.avgPrice * 0.7 ? 'Risk found' : 'Looks normal'}</strong>
-        </div>
-        <div>
-          <span>Seller Rating</span>
-          <strong>{product.sellerRating < 3 ? 'Low rating' : 'Good rating'}</strong>
-        </div>
-        <div>
-          <span>Review Count</span>
-          <strong>{product.reviews < 20 ? 'Low reviews' : 'Enough reviews'}</strong>
-        </div>
-      </div>
+      <div className="detail-panel">
+        <p className="mono-label">Trust review</p>
+        <h2>{product.name}</h2>
+        <p>{product.description}</p>
 
-      <button className="primary-button" onClick={onContinue} type="button">
-        Continue to Decision
-      </button>
-    </section>
-  );
-}
+        <div className="detail-grid">
+          <div>
+            <span>Price</span>
+            <strong>${product.price}</strong>
+          </div>
+          <div>
+            <span>Average Price</span>
+            <strong>${product.avgPrice}</strong>
+          </div>
+          <div>
+            <span>Seller Rating</span>
+            <strong>{product.sellerRating}/5</strong>
+          </div>
+          <div>
+            <span>Reviews</span>
+            <strong>{product.reviews}</strong>
+          </div>
+        </div>
 
-function DecisionPage({ product, onCheckout, onSkip }) {
-  const trustScore = calculateTrustScore(product);
-  const trustLabel = getTrustLabel(trustScore);
+        <div className={`trust-summary ${trustLabel.toLowerCase()}`}>
+          <strong>{getTrustMessage(trustScore)}</strong>
+          <span>
+            {trustLabel === 'Safe' && 'This product has strong seller and review signals.'}
+            {trustLabel === 'Medium' && 'This product can be bought, but review the seller first.'}
+            {trustLabel === 'Risky' && 'This product has multiple risk signals. Consider skipping it.'}
+          </span>
+        </div>
 
-  if (trustLabel === 'Safe') {
-    return (
-      <section className="flow-card narrow">
-        <p className="page-kicker">Is Product Safe?</p>
-        <h1>Yes, this product looks safe.</h1>
-        <p>TrustCart recommends adding this product to cart.</p>
-        <button className="primary-button" onClick={onCheckout} type="button">
+        <button className="primary-button detail-button" onClick={() => onAddToCart(product)} type="button">
           Add to Cart
         </button>
-      </section>
-    );
-  }
-
-  if (trustLabel === 'Medium') {
-    return (
-      <section className="flow-card narrow">
-        <p className="page-kicker">Is Product Safe?</p>
-        <h1>Medium risk detected.</h1>
-        <p>TrustCart shows a warning, but you can still choose to continue.</p>
-        <p className="medium-warning">Review seller details carefully before checkout.</p>
-        <button className="primary-button" onClick={onCheckout} type="button">
-          Show Warning + Allow Buy
-        </button>
-      </section>
-    );
-  }
-
-  return (
-    <section className="flow-card narrow">
-      <p className="page-kicker">Is Product Safe?</p>
-      <h1>Strong warning shown.</h1>
-      <p className="warning-text">⚠️ Suspicious product detected</p>
-      <p>This product has multiple risk signals. You can skip it or buy anyway.</p>
-
-      <div className="button-row">
-        <button className="secondary-button" onClick={onSkip} type="button">
-          Skip Product
-        </button>
-        <button className="primary-button" onClick={onCheckout} type="button">
-          Buy Anyway
-        </button>
       </div>
-    </section>
-  );
-}
-
-function CheckoutPage({ product, onOrderPlaced }) {
-  return (
-    <section className="flow-card narrow">
-      <p className="page-kicker">Checkout</p>
-      <h1>Ready to place order?</h1>
-      <p>{product.name} has been added to your cart.</p>
-      <button className="primary-button" onClick={onOrderPlaced} type="button">
-        Place Order
-      </button>
-    </section>
-  );
-}
-
-function OrderPlacedPage({ onRestart }) {
-  return (
-    <section className="flow-card narrow">
-      <p className="page-kicker">Order Placed</p>
-      <h1>Your TrustCart order is placed.</h1>
-      <p>The step-by-step product safety flow is complete.</p>
-      <button className="primary-button" onClick={onRestart} type="button">
-        Back to Homepage
-      </button>
     </section>
   );
 }
 
 function App() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('featured');
   const [selectedProduct, setSelectedProduct] = useState(products[0]);
+  const [cartCount, setCartCount] = useState(0);
+
+  const productsToShow = useMemo(() => {
+    const scoredProducts = products.map((product) => {
+      const trustScore = calculateTrustScore(product);
+
+      return {
+        ...product,
+        trustScore,
+        trustLabel: getTrustLabel(trustScore),
+      };
+    });
+
+    const filteredProducts = scoredProducts.filter((product) => {
+      if (selectedFilter === 'All') {
+        return true;
+      }
+
+      return product.trustLabel === selectedFilter;
+    });
+
+    return [...filteredProducts].sort((firstProduct, secondProduct) => {
+      if (sortBy === 'price') {
+        return firstProduct.price - secondProduct.price;
+      }
+
+      if (sortBy === 'trust') {
+        return secondProduct.trustScore - firstProduct.trustScore;
+      }
+
+      return firstProduct.id - secondProduct.id;
+    });
+  }, [selectedFilter, sortBy]);
+
+  function addToCart() {
+    setCartCount((count) => count + 1);
+  }
 
   function selectProduct(product) {
     setSelectedProduct(product);
-    setCurrentStep(3);
-  }
-
-  function restartFlow() {
-    setSelectedProduct(products[0]);
-    setCurrentStep(0);
   }
 
   return (
     <main className="App">
-      <StepProgress currentStep={currentStep} />
-
-      {currentStep === 0 && <HomePage onStart={() => setCurrentStep(1)} />}
-      {currentStep === 1 && <SearchExplorePage onContinue={() => setCurrentStep(2)} />}
-      {currentStep === 2 && <ProductListingPage onSelectProduct={selectProduct} />}
-      {currentStep === 3 && (
-        <ProductDetailPage product={selectedProduct} onCalculate={() => setCurrentStep(4)} />
-      )}
-      {currentStep === 4 && (
-        <TrustScorePage product={selectedProduct} onContinue={() => setCurrentStep(5)} />
-      )}
-      {currentStep === 5 && (
-        <DecisionPage
-          product={selectedProduct}
-          onCheckout={() => setCurrentStep(6)}
-          onSkip={() => setCurrentStep(2)}
-        />
-      )}
-      {currentStep === 6 && (
-        <CheckoutPage product={selectedProduct} onOrderPlaced={() => setCurrentStep(7)} />
-      )}
-      {currentStep === 7 && <OrderPlacedPage onRestart={restartFlow} />}
+      <Header cartCount={cartCount} />
+      <Hero featuredProduct={products[0]} onAddToCart={addToCart} />
+      <TrustEngineSection />
+      <ProductCatalog
+        onAddToCart={addToCart}
+        onSelect={selectProduct}
+        productsToShow={productsToShow}
+        selectedFilter={selectedFilter}
+        setSelectedFilter={setSelectedFilter}
+        setSortBy={setSortBy}
+        sortBy={sortBy}
+      />
+      <ProductDetail onAddToCart={addToCart} product={selectedProduct} />
     </main>
   );
 }

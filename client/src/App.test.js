@@ -1,81 +1,78 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import App from './App';
 
-function goToProductListing() {
-  render(<App />);
-  fireEvent.click(screen.getByRole('button', { name: /start shopping/i }));
-  fireEvent.click(screen.getByRole('button', { name: /explore products/i }));
+function getCatalogCard(productName) {
+  const productGrid = screen.getByLabelText(/product results/i);
+  const productCards = within(productGrid).getAllByRole('article');
+
+  return productCards.find((card) =>
+    within(card).queryByRole('heading', { name: productName })
+  );
 }
 
-test('starts on the homepage before showing product listing', () => {
+test('renders the ecommerce homepage and TrustCart engine', () => {
   render(<App />);
 
-  expect(screen.getByRole('heading', { name: /shop with confidence/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /start shopping/i })).toBeInTheDocument();
-  expect(screen.queryByRole('heading', { name: /select a product/i })).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /shop smarter/i })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /explore products/i })).toBeInTheDocument();
+  expect(screen.getByText(/02 \/\/ engine/i)).toBeInTheDocument();
+  expect(screen.getByText(/ai-driven trust infrastructure/i)).toBeInTheDocument();
+  expect(screen.getByText(/fake product signals/i)).toBeInTheDocument();
 });
 
-test('moves step by step from homepage to product listing', () => {
+test('renders product catalog with filters and trust badges', () => {
   render(<App />);
+  const productGrid = screen.getByLabelText(/product results/i);
 
-  fireEvent.click(screen.getByRole('button', { name: /start shopping/i }));
-  expect(screen.getByRole('heading', { name: /what are you looking for/i })).toBeInTheDocument();
-
-  fireEvent.click(screen.getByRole('button', { name: /explore products/i }));
-  expect(screen.getByRole('heading', { name: /select a product/i })).toBeInTheDocument();
-  expect(screen.getByText(/zenphone pro/i)).toBeInTheDocument();
-  expect(screen.getByText(/fittrack watch/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /product catalog/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /safe/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /risky/i })).toBeInTheDocument();
+  expect(within(productGrid).getByRole('heading', { name: /zenphone pro/i })).toBeInTheDocument();
+  expect(within(productGrid).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
+  expect(within(productGrid).getAllByText(/safe \(100\)/i)).toHaveLength(3);
+  expect(within(productGrid).getByText(/risky \(20\)/i)).toBeInTheDocument();
 });
 
-test('filters products by risky trust level on listing page', () => {
-  goToProductListing();
+test('filters products by risky trust level', () => {
+  render(<App />);
+  const productGrid = screen.getByLabelText(/product results/i);
 
   fireEvent.click(screen.getByRole('button', { name: /risky/i }));
-  expect(screen.getByText(/fittrack watch/i)).toBeInTheDocument();
-  expect(screen.queryByText(/zenphone pro/i)).not.toBeInTheDocument();
+  expect(within(productGrid).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
+  expect(within(productGrid).queryByRole('heading', { name: /zenphone pro/i })).not.toBeInTheDocument();
 });
 
-test('sorts products by trust score from high to low on listing page', () => {
-  goToProductListing();
+test('sorts products by trust score from high to low', () => {
+  render(<App />);
 
-  fireEvent.change(screen.getByLabelText(/sort products/i), {
+  fireEvent.change(screen.getByLabelText(/sort/i), {
     target: { value: 'trust' },
   });
 
   const productGrid = screen.getByLabelText(/product results/i);
   const productCards = within(productGrid).getAllByRole('article');
 
-  expect(within(productCards[0]).getByText(/zenphone pro/i)).toBeInTheDocument();
+  expect(within(productCards[0]).getByRole('heading', { name: /zenphone pro/i })).toBeInTheDocument();
 });
 
-test('walks through a risky product decision path', () => {
-  goToProductListing();
+test('selects a product and updates the trust review panel', () => {
+  render(<App />);
 
-  const productGrid = screen.getByLabelText(/product results/i);
-  const fitTrackCard = within(productGrid).getByText(/fittrack watch/i).closest('article');
+  const fitTrackCard = getCatalogCard(/fittrack watch/i);
 
-  fireEvent.click(within(fitTrackCard).getByRole('button', { name: /select product/i }));
-  expect(screen.getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
+  fireEvent.click(within(fitTrackCard).getByRole('button', { name: /details/i }));
 
-  fireEvent.click(screen.getByRole('button', { name: /calculate trust score/i }));
-  expect(screen.getByText(/20\/100/i)).toBeInTheDocument();
+  const detailSection = screen.getByLabelText(/selected product trust review/i);
 
-  fireEvent.click(screen.getByRole('button', { name: /continue to decision/i }));
-  expect(screen.getByRole('heading', { name: /strong warning shown/i })).toBeInTheDocument();
-  expect(screen.getByText(/suspicious product detected/i)).toBeInTheDocument();
+  expect(within(detailSection).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
+  expect(within(detailSection).getByText(/suspicious product detected/i)).toBeInTheDocument();
 });
 
-test('walks through a safe product checkout path', () => {
-  goToProductListing();
+test('adds products to cart', () => {
+  render(<App />);
 
-  const productGrid = screen.getByLabelText(/product results/i);
-  const zenphoneCard = within(productGrid).getByText(/zenphone pro/i).closest('article');
-
-  fireEvent.click(within(zenphoneCard).getByRole('button', { name: /select product/i }));
-  fireEvent.click(screen.getByRole('button', { name: /calculate trust score/i }));
-  fireEvent.click(screen.getByRole('button', { name: /continue to decision/i }));
-  fireEvent.click(screen.getByRole('button', { name: /add to cart/i }));
-  fireEvent.click(screen.getByRole('button', { name: /place order/i }));
-
-  expect(screen.getByRole('heading', { name: /your trustcart order is placed/i })).toBeInTheDocument();
+  fireEvent.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
+  expect(screen.getByRole('link', { name: /cart \(1\)/i })).toBeInTheDocument();
 });
