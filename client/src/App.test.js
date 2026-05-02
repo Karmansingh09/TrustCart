@@ -23,12 +23,13 @@ test('renders the ecommerce homepage and TrustCart engine', () => {
 test('renders product catalog with filters and trust badges', () => {
   render(<App />);
   const productGrid = screen.getByLabelText(/product results/i);
+  const filterGroup = screen.getByLabelText(/filter products/i);
 
   expect(screen.getByRole('heading', { name: /product catalog/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /safe/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /risky/i })).toBeInTheDocument();
+  expect(within(filterGroup).getByRole('button', { name: /all/i })).toBeInTheDocument();
+  expect(within(filterGroup).getByRole('button', { name: /safe/i })).toBeInTheDocument();
+  expect(within(filterGroup).getByRole('button', { name: /medium/i })).toBeInTheDocument();
+  expect(within(filterGroup).getByRole('button', { name: /risky/i })).toBeInTheDocument();
   expect(within(productGrid).getByRole('heading', { name: /zenphone pro/i })).toBeInTheDocument();
   expect(within(productGrid).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
   expect(within(productGrid).getAllByText(/safe \(100\)/i)).toHaveLength(3);
@@ -38,8 +39,9 @@ test('renders product catalog with filters and trust badges', () => {
 test('filters products by risky trust level', () => {
   render(<App />);
   const productGrid = screen.getByLabelText(/product results/i);
+  const filterGroup = screen.getByLabelText(/filter products/i);
 
-  fireEvent.click(screen.getByRole('button', { name: /risky/i }));
+  fireEvent.click(within(filterGroup).getByRole('button', { name: /risky/i }));
   expect(within(productGrid).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
   expect(within(productGrid).queryByRole('heading', { name: /zenphone pro/i })).not.toBeInTheDocument();
 });
