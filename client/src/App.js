@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import TrustBadge from './components/TrustBadge';
 import calculateTrustScore from './utils/calculateTrustScore';
+import { fallbackProducts } from './utils/mockData';
 
 const PRODUCTS_API_URL = 'http://localhost:5000/api/products';
 
@@ -936,6 +937,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch products from the Express backend when the app starts.
+  // Falls back to local mock data if the API is unreachable.
   useEffect(() => {
     let isMounted = true;
 
@@ -944,27 +946,26 @@ function App() {
     fetch(PRODUCTS_API_URL)
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Product API request failed');
+          throw new Error('Product API responded with status ' + response.status);
         }
-
         return response.json();
       })
       .then((apiProducts) => {
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         const normalizedProducts = apiProducts.map((product, index) => normalizeProduct(product, index));
-
         setProducts(normalizedProducts);
         setSelectedProduct(normalizedProducts[0] || null);
         setApiError('');
+        console.log('✅ Loaded', normalizedProducts.length, 'products from API.');
       })
       .catch((error) => {
-        console.log('Error fetching products:', error);
-
+        console.warn('⚠️ API unavailable, using local fallback data. Error:', error.message);
         if (isMounted) {
-          setApiError('Unable to load products from the API.');
+          // Load fallback data so search and filters still work
+          const normalizedFallback = fallbackProducts.map((product, index) => normalizeProduct(product, index));
+          setProducts(normalizedFallback);
+          setSelectedProduct(normalizedFallback[0] || null);
+          setApiError('⚠️ Showing demo data — backend offline. Run: node server.js in /server');
         }
       })
       .finally(() => {
