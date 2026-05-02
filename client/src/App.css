@@ -142,6 +142,10 @@ select:focus-visible {
   min-height: calc(100vh - 76px);
 }
 
+.hero-loading {
+  grid-template-columns: 1fr;
+}
+
 /* Small technical label used throughout the premium UI. */
 .mono-label,
 .engine-card-label,
@@ -649,6 +653,18 @@ select:focus-visible {
   margin-top: 22px;
   padding: 34px;
   text-align: center;
+}
+
+.loading-message,
+.api-error {
+  margin: 18px auto;
+  width: min(1180px, calc(100% - 48px));
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.api-error {
+  color: #fecaca;
 }
 
 .skeleton-card {

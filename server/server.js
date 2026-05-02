@@ -25,6 +25,10 @@ var products = [
     avgPrice: 950,
     sellerRating: 4.8,
     reviews: 124,
+    category: 'Phones',
+    historyScore: 92,
+    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80',
+    description: 'A premium everyday flagship with all-day battery and verified seller history.',
   },
   {
     id: 2,
@@ -33,6 +37,10 @@ var products = [
     avgPrice: 190,
     sellerRating: 2.8,
     reviews: 54,
+    category: 'Audio',
+    historyScore: 64,
+    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=80',
+    description: 'Wireless earbuds with active noise reduction and a medium seller risk profile.',
   },
   {
     id: 3,
@@ -41,6 +49,10 @@ var products = [
     avgPrice: 180,
     sellerRating: 2.4,
     reviews: 11,
+    category: 'Wearables',
+    historyScore: 38,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+    description: 'A low-priced wearable with suspicious pricing and limited review history.',
   },
   {
     id: 4,
@@ -49,6 +61,10 @@ var products = [
     avgPrice: 1250,
     sellerRating: 4.7,
     reviews: 89,
+    category: 'Laptops',
+    historyScore: 88,
+    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+    description: 'A thin laptop from a highly rated seller with a strong TrustCart score.',
   },
   {
     id: 5,
@@ -57,6 +73,10 @@ var products = [
     avgPrice: 110,
     sellerRating: 3.7,
     reviews: 8,
+    category: 'Audio',
+    historyScore: 51,
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
+    description: 'Budget earbuds with low reviews and a price far below the usual market range.',
   },
 ];
 
@@ -113,6 +133,10 @@ app.get('/api/products', function (req, res) {
       avgPrice: product.avgPrice,
       sellerRating: product.sellerRating,
       reviews: product.reviews,
+      category: product.category,
+      historyScore: product.historyScore,
+      image: product.image,
+      description: product.description,
       trustScore: calculateTrustScore(product),
     };
   });
@@ -125,6 +149,6 @@ app.get('/api/products', function (req, res) {
 // Start Server
 // -----------------------------
 
-app.listen(PORT, function () {
-  console.log('TrustCart server running on port ' + PORT);
+app.listen(PORT, '127.0.0.1', function () {
+  console.log('TrustCart server running on http://localhost:' + PORT);
 });

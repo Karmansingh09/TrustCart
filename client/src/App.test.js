@@ -1,10 +1,88 @@
 import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import App from './App';
 
+const mockProducts = [
+  {
+    id: 1,
+    name: 'Zenphone Pro',
+    category: 'Phones',
+    price: 899,
+    avgPrice: 950,
+    sellerRating: 4.8,
+    reviews: 124,
+    historyScore: 92,
+    image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80',
+    description: 'A premium everyday flagship with all-day battery and verified seller history.',
+    trustScore: 100,
+  },
+  {
+    id: 2,
+    name: 'AirSound Pods',
+    category: 'Audio',
+    price: 149,
+    avgPrice: 190,
+    sellerRating: 2.8,
+    reviews: 54,
+    historyScore: 64,
+    image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=80',
+    description: 'Wireless earbuds with active noise reduction and a medium seller risk profile.',
+    trustScore: 75,
+  },
+  {
+    id: 3,
+    name: 'FitTrack Watch',
+    category: 'Wearables',
+    price: 79,
+    avgPrice: 180,
+    sellerRating: 2.4,
+    reviews: 11,
+    historyScore: 38,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+    description: 'A low-priced wearable with suspicious pricing and limited review history.',
+    trustScore: 30,
+  },
+  {
+    id: 4,
+    name: 'NovaBook Air',
+    category: 'Laptops',
+    price: 1199,
+    avgPrice: 1250,
+    sellerRating: 4.7,
+    reviews: 89,
+    historyScore: 88,
+    image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+    description: 'A thin laptop from a highly rated seller with a strong TrustCart score.',
+    trustScore: 100,
+  },
+  {
+    id: 5,
+    name: 'PixelBuds Lite',
+    category: 'Audio',
+    price: 39,
+    avgPrice: 110,
+    sellerRating: 3.7,
+    reviews: 8,
+    historyScore: 51,
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
+    description: 'Budget earbuds with low reviews and a price far below the usual market range.',
+    trustScore: 55,
+  },
+];
+
 beforeEach(() => {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockProducts),
+    })
+  );
   localStorage.clear();
   window.history.replaceState(null, '', '/');
   document.body.dataset.theme = '';
+});
+
+afterEach(() => {
+  delete global.fetch;
 });
 
 async function getProductGrid() {
@@ -36,6 +114,7 @@ test('renders product catalog with search, filters, and trust badges', async () 
   render(<App />);
   const productGrid = await getProductGrid();
 
+  expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/api/products');
   expect(screen.getByLabelText(/search products/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^all$/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /^safe$/i })).toBeInTheDocument();
@@ -43,8 +122,8 @@ test('renders product catalog with search, filters, and trust badges', async () 
   expect(screen.getByRole('button', { name: /^risky$/i })).toBeInTheDocument();
   expect(within(productGrid).getByRole('heading', { name: /zenphone pro/i })).toBeInTheDocument();
   expect(within(productGrid).getByRole('heading', { name: /fittrack watch/i })).toBeInTheDocument();
-  expect(within(productGrid).getAllByText(/safe \(100\)/i)).toHaveLength(4);
-  expect(within(productGrid).getAllByText(/risky \(20\)/i)).toHaveLength(2);
+  expect(within(productGrid).getAllByText(/safe \(100\)/i)).toHaveLength(2);
+  expect(within(productGrid).getByText(/risky \(30\)/i)).toBeInTheDocument();
 });
 
 test('searches and filters products dynamically', async () => {

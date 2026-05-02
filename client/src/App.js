@@ -3,109 +3,49 @@ import './App.css';
 import TrustBadge from './components/TrustBadge';
 import calculateTrustScore from './utils/calculateTrustScore';
 
-// Dummy product data for the ecommerce demo.
-// Each product includes the fields needed by filters, sorting, and trust scoring.
-const products = [
-  {
-    id: 1,
-    name: 'Zenphone Pro',
+const PRODUCTS_API_URL = 'http://localhost:5000/api/products';
+
+// UI fallback details keep the cards polished if the API only sends basic product fields.
+const productDisplayFallbacks = {
+  1: {
     category: 'Phones',
-    price: 899,
-    avgPrice: 950,
-    sellerRating: 4.8,
-    reviews: 124,
     historyScore: 92,
     image: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=80',
     description: 'A premium everyday flagship with all-day battery and verified seller history.',
   },
-  {
-    id: 2,
-    name: 'AirSound Pods',
+  2: {
     category: 'Audio',
-    price: 149,
-    avgPrice: 190,
-    sellerRating: 2.8,
-    reviews: 54,
     historyScore: 64,
     image: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=80',
     description: 'Wireless earbuds with active noise reduction and a medium seller risk profile.',
   },
-  {
-    id: 3,
-    name: 'FitTrack Watch',
+  3: {
     category: 'Wearables',
-    price: 79,
-    avgPrice: 180,
-    sellerRating: 2.4,
-    reviews: 11,
     historyScore: 38,
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
     description: 'A low-priced wearable with suspicious pricing and limited review history.',
   },
-  {
-    id: 4,
-    name: 'NovaBook Air',
+  4: {
     category: 'Laptops',
-    price: 1199,
-    avgPrice: 1250,
-    sellerRating: 4.7,
-    reviews: 89,
     historyScore: 88,
     image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
     description: 'A thin laptop from a highly rated seller with a strong TrustCart score.',
   },
-  {
-    id: 5,
-    name: 'PixelBuds Lite',
+  5: {
     category: 'Audio',
-    price: 39,
-    avgPrice: 110,
-    sellerRating: 3.7,
-    reviews: 8,
     historyScore: 51,
     image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=900&q=80',
     description: 'Budget earbuds with low reviews and a price far below the usual market range.',
   },
-  {
-    id: 6,
-    name: 'HomeCam Secure',
-    category: 'Smart Home',
-    price: 129,
-    avgPrice: 150,
-    sellerRating: 4.2,
-    reviews: 33,
-    historyScore: 79,
-    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=900&q=80',
-    description: 'A compact home camera with stable seller signals and enough buyer feedback.',
-  },
-  {
-    id: 7,
-    name: 'CreatorPad 11',
-    category: 'Tablets',
-    price: 529,
-    avgPrice: 590,
-    sellerRating: 4.5,
-    reviews: 76,
-    historyScore: 84,
-    image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=900&q=80',
-    description: 'A lightweight tablet with a verified seller and balanced market pricing.',
-  },
-  {
-    id: 8,
-    name: 'SoundBar Mini',
-    category: 'Audio',
-    price: 99,
-    avgPrice: 240,
-    sellerRating: 2.9,
-    reviews: 17,
-    historyScore: 36,
-    image: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=900&q=80',
-    description: 'A compact speaker with pricing and review signals that need extra caution.',
-  },
+};
+
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=900&q=80',
+  'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=900&q=80',
 ];
 
 const trustFilters = ['All', 'Safe', 'Medium', 'Risky'];
-const categoryOptions = [...new Set(products.map((product) => product.category))];
 
 // Cards used in the "Trust Engine" section of the homepage.
 const engineCards = [
@@ -163,6 +103,37 @@ const testimonials = [
   ['Dev P.', 'The filters and wishlist make this feel like a real shopping app.'],
 ];
 
+// Normalize API products so the UI has safe values for every card field.
+function normalizeProduct(product, index) {
+  const fallback = productDisplayFallbacks[product.id] || {};
+  const normalizedProduct = {
+    ...product,
+    id: product.id,
+    name: product.name || `Product ${index + 1}`,
+    category: product.category || fallback.category || 'General',
+    price: Number(product.price || 0),
+    avgPrice: Number(product.avgPrice || product.averagePrice || product.price || 0),
+    sellerRating: Number(product.sellerRating || 0),
+    reviews: Number(product.reviews || 0),
+    historyScore: Number(product.historyScore || fallback.historyScore || product.trustScore || 70),
+    image: product.image || fallback.image || fallbackImages[index % fallbackImages.length],
+    description:
+      product.description ||
+      fallback.description ||
+      'A TrustCart product checked with price, seller, review, and trust score signals.',
+  };
+
+  return {
+    ...normalizedProduct,
+    trustScore: Number(product.trustScore ?? calculateTrustScore(normalizedProduct)),
+  };
+}
+
+// Prefer the backend score. The fallback keeps the UI working during local development.
+function getProductTrustScore(product) {
+  return Number(product.trustScore ?? calculateTrustScore(product));
+}
+
 // Converts a numeric score into the text shown on product badges.
 function getTrustLabel(score) {
   if (score >= 80) {
@@ -191,11 +162,13 @@ function getTrustMessage(score) {
 
 // Breaks the trust score into readable penalty parts for the detail page and demo calculator.
 function calculateTrustBreakdown(product) {
-  const pricePenalty = product.price < product.avgPrice * 0.7 ? 30 : 0;
-  const ratingPenalty = product.sellerRating < 3 ? 30 : 0;
-  const reviewPenalty = product.reviews < 20 ? 20 : 0;
-  const historyPenalty = product.historyScore < 50 ? 10 : 0;
-  const score = Math.max(0, Math.min(100, 100 - pricePenalty - ratingPenalty - reviewPenalty - historyPenalty));
+  const hasApiScore = product.trustScore !== undefined && product.trustScore !== null;
+  const pricePenalty = product.price < product.avgPrice * 0.6 ? 30 : 0;
+  const ratingPenalty = product.sellerRating < 3 ? 25 : 0;
+  const reviewPenalty = product.reviews < 20 ? 15 : 0;
+  const historyPenalty = !hasApiScore && product.historyScore < 50 ? 10 : 0;
+  const fallbackScore = 100 - pricePenalty - ratingPenalty - reviewPenalty - historyPenalty;
+  const score = Math.max(0, Math.min(100, product.trustScore ?? fallbackScore));
 
   return {
     score,
@@ -252,7 +225,7 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist
 
 // Main hero area and featured product card.
 function Hero({ featuredProduct, onAddToCart, onWishlistToggle, isWishlisted }) {
-  const trustScore = calculateTrustScore(featuredProduct);
+  const trustScore = getProductTrustScore(featuredProduct);
 
   return (
     <section className="hero-section" id="home">
@@ -337,6 +310,7 @@ function SearchFilters({
   clearFilter,
   filterPanelOpen,
   priceMax,
+  productOptions = [],
   ratingMin,
   searchTerm,
   selectedCategories,
@@ -376,7 +350,7 @@ function SearchFilters({
             value={searchTerm}
           />
           <datalist id="product-suggestions">
-            {products.map((product) => (
+            {productOptions.map((product) => (
               <option key={product.id} value={product.name} />
             ))}
           </datalist>
@@ -479,7 +453,7 @@ function ProductCard({
   product,
   wishlisted,
 }) {
-  const trustScore = calculateTrustScore(product);
+  const trustScore = getProductTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
 
   return (
@@ -542,15 +516,18 @@ function ProductCard({
 // Simple skeleton placeholders shown while filters are "loading".
 function SkeletonGrid() {
   return (
-    <div className="products-grid" aria-label="Loading products">
-      {[1, 2, 3].map((item) => (
-        <div className="product-card skeleton-card" key={item}>
-          <span />
-          <strong />
-          <p />
-        </div>
-      ))}
-    </div>
+    <>
+      <p className="loading-message">Loading products...</p>
+      <div className="products-grid" aria-label="Loading products">
+        {[1, 2, 3].map((item) => (
+          <div className="product-card skeleton-card" key={item}>
+            <span />
+            <strong />
+            <p />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -612,7 +589,7 @@ function ProductCatalog({
 
 // Detail page for the currently selected product, including a trust breakdown.
 function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
-  const trustScore = calculateTrustScore(product);
+  const trustScore = getProductTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
   const breakdown = calculateTrustBreakdown(product);
 
@@ -760,7 +737,7 @@ function ComparisonModal({ compareProducts, onAddToCart, onClose }) {
             <div className="compare-row" key={metric} style={{ '--compare-columns': compareProducts.length }}>
               <span>{metric}</span>
               {compareProducts.map((product) => {
-                const trustScore = calculateTrustScore(product);
+                const trustScore = getProductTrustScore(product);
                 const values = {
                   Price: `$${product.price}`,
                   'Average Price': `$${product.avgPrice}`,
@@ -942,7 +919,10 @@ function App() {
   const [cartCount, setCartCount] = useStoredState('trustcart-cart-count', 0);
 
   // Page state controls the current ecommerce flow.
-  const [selectedProduct, setSelectedProduct] = useState(products[0]);
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [apiLoading, setApiLoading] = useState(true);
+  const [apiError, setApiError] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
   const [searchTerm, setSearchTerm] = useState('');
@@ -954,6 +934,49 @@ function App() {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch products from the Express backend when the app starts.
+  useEffect(() => {
+    let isMounted = true;
+
+    setApiLoading(true);
+
+    fetch(PRODUCTS_API_URL)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Product API request failed');
+        }
+
+        return response.json();
+      })
+      .then((apiProducts) => {
+        if (!isMounted) {
+          return;
+        }
+
+        const normalizedProducts = apiProducts.map((product, index) => normalizeProduct(product, index));
+
+        setProducts(normalizedProducts);
+        setSelectedProduct(normalizedProducts[0] || null);
+        setApiError('');
+      })
+      .catch((error) => {
+        console.log('Error fetching products:', error);
+
+        if (isMounted) {
+          setApiError('Unable to load products from the API.');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setApiLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Read filters from the URL when the app first loads.
   useEffect(() => {
@@ -992,10 +1015,15 @@ function App() {
     return () => clearTimeout(timer);
   }, [priceMax, ratingMin, searchTerm, selectedCategories, selectedFilter, sortBy]);
 
+  const categoryOptions = useMemo(
+    () => [...new Set(products.map((product) => product.category))],
+    [products]
+  );
+
   // Main catalog pipeline: score products, filter them, then sort the final list.
   const productsToShow = useMemo(() => {
     const scoredProducts = products.map((product) => {
-      const trustScore = calculateTrustScore(product);
+      const trustScore = getProductTrustScore(product);
 
       return {
         ...product,
@@ -1020,7 +1048,7 @@ function App() {
       if (sortBy === 'trust') return secondProduct.trustScore - firstProduct.trustScore;
       return firstProduct.id - secondProduct.id;
     });
-  }, [priceMax, ratingMin, searchTerm, selectedCategories, selectedFilter, sortBy]);
+  }, [priceMax, products, ratingMin, searchTerm, selectedCategories, selectedFilter, sortBy]);
 
   const wishlistProducts = products.filter((product) => wishlistIds.includes(product.id));
   const compareProducts = products.filter((product) => compareIds.includes(product.id));
@@ -1071,12 +1099,27 @@ function App() {
         theme={theme}
         wishlistCount={wishlistIds.length}
       />
-      <Hero
-        featuredProduct={products[0]}
-        isWishlisted={wishlistIds.includes(products[0].id)}
-        onAddToCart={addToCart}
-        onWishlistToggle={toggleWishlist}
-      />
+      {products[0] ? (
+        <Hero
+          featuredProduct={products[0]}
+          isWishlisted={wishlistIds.includes(products[0].id)}
+          onAddToCart={addToCart}
+          onWishlistToggle={toggleWishlist}
+        />
+      ) : (
+        <section className="hero-section hero-loading" id="home">
+          <div className="hero-copy">
+            <p className="mono-label">Verified ecommerce intelligence</p>
+            <h1>Shop smarter. Avoid risky products.</h1>
+            <p>Loading products...</p>
+            <div className="hero-actions">
+              <a className="primary-link" href="#products">Explore Products</a>
+              <a className="secondary-link" href="#engine">View Trust Engine</a>
+            </div>
+          </div>
+        </section>
+      )}
+      {apiError && <p className="api-error">{apiError}</p>}
       <TrustEngineSection />
       {wishlistOpen && (
         <WishlistPage
@@ -1091,13 +1134,14 @@ function App() {
         categories={categoryOptions}
         compareIds={compareIds}
         filterPanelOpen={filterPanelOpen}
-        isLoading={isLoading}
+        isLoading={apiLoading || isLoading}
         onAddToCart={addToCart}
         onClearFilters={clearFilters}
         onCompareToggle={toggleCompare}
         onSelect={setSelectedProduct}
         onWishlistToggle={toggleWishlist}
         priceMax={priceMax}
+        productOptions={products}
         productsToShow={productsToShow}
         ratingMin={ratingMin}
         searchTerm={searchTerm}
@@ -1126,12 +1170,14 @@ function App() {
           Clear
         </button>
       </div>
-      <ProductDetail
-        onAddToCart={addToCart}
-        onWishlistToggle={toggleWishlist}
-        product={selectedProduct}
-        wishlisted={wishlistIds.includes(selectedProduct.id)}
-      />
+      {selectedProduct && (
+        <ProductDetail
+          onAddToCart={addToCart}
+          onWishlistToggle={toggleWishlist}
+          product={selectedProduct}
+          wishlisted={wishlistIds.includes(selectedProduct.id)}
+        />
+      )}
       <TrustCalculator />
       <EducationSections />
       {compareOpen && (
