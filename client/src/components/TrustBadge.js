@@ -1,4 +1,5 @@
 function TrustBadge({ trustScore }) {
+  // Default to Risky, then upgrade the label/color when the score is higher.
   let label = 'Risky';
   let backgroundColor = '#e74c3c';
   let glowColor = 'rgba(231, 76, 60, 0.45)';
@@ -13,6 +14,7 @@ function TrustBadge({ trustScore }) {
     glowColor = 'rgba(243, 156, 18, 0.45)';
   }
 
+  // Absolute positioning places the badge at the top-right of any product card.
   const badgeStyle = {
     position: 'absolute',
     top: '16px',

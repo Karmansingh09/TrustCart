@@ -3,6 +3,8 @@ import './App.css';
 import TrustBadge from './components/TrustBadge';
 import calculateTrustScore from './utils/calculateTrustScore';
 
+// Dummy product data for the ecommerce demo.
+// Each product includes the fields needed by filters, sorting, and trust scoring.
 const products = [
   {
     id: 1,
@@ -105,6 +107,7 @@ const products = [
 const trustFilters = ['All', 'Safe', 'Medium', 'Risky'];
 const categoryOptions = [...new Set(products.map((product) => product.category))];
 
+// Cards used in the "Trust Engine" section of the homepage.
 const engineCards = [
   {
     number: '01',
@@ -140,6 +143,7 @@ const howItWorks = [
   ['Buy', 'Add trusted products to cart or save items to your wishlist.'],
 ];
 
+// Short educational content used by the FAQ accordion.
 const faqs = [
   ['How is the trust score calculated?', 'The demo score checks price vs average price, seller rating, review count, and product history.'],
   ['Can a medium product still be bought?', 'Yes. Medium means you should review the seller and product details before checkout.'],
@@ -159,6 +163,7 @@ const testimonials = [
   ['Dev P.', 'The filters and wishlist make this feel like a real shopping app.'],
 ];
 
+// Converts a numeric score into the text shown on product badges.
 function getTrustLabel(score) {
   if (score >= 80) {
     return 'Safe';
@@ -171,6 +176,7 @@ function getTrustLabel(score) {
   return 'Risky';
 }
 
+// Shows a simple buyer-facing recommendation for the selected product.
 function getTrustMessage(score) {
   if (score >= 80) {
     return 'Recommended to buy';
@@ -183,6 +189,7 @@ function getTrustMessage(score) {
   return 'Suspicious product detected';
 }
 
+// Breaks the trust score into readable penalty parts for the detail page and demo calculator.
 function calculateTrustBreakdown(product) {
   const pricePenalty = product.price < product.avgPrice * 0.7 ? 30 : 0;
   const ratingPenalty = product.sellerRating < 3 ? 30 : 0;
@@ -201,6 +208,7 @@ function calculateTrustBreakdown(product) {
   };
 }
 
+// Small localStorage helper used for theme, cart, and wishlist persistence.
 function useStoredState(key, initialValue) {
   const [value, setValue] = useState(() => {
     try {
@@ -218,6 +226,7 @@ function useStoredState(key, initialValue) {
   return [value, setValue];
 }
 
+// Top navigation with theme, wishlist, and cart controls.
 function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist }) {
   return (
     <header className="site-header">
@@ -241,6 +250,7 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist
   );
 }
 
+// Main hero area and featured product card.
 function Hero({ featuredProduct, onAddToCart, onWishlistToggle, isWishlisted }) {
   const trustScore = calculateTrustScore(featuredProduct);
 
@@ -286,6 +296,7 @@ function Hero({ featuredProduct, onAddToCart, onWishlistToggle, isWishlisted }) 
   );
 }
 
+// Premium trust-system cards inspired by the reference design.
 function TrustEngineSection() {
   return (
     <section className="engine-section reveal" id="engine" aria-label="TrustCart AI trust engine">
@@ -319,6 +330,7 @@ function TrustEngineSection() {
   );
 }
 
+// Search, category, price, rating, sort, and active-filter controls.
 function SearchFilters({
   activeFilter,
   categories,
@@ -337,6 +349,7 @@ function SearchFilters({
   setSortBy,
   sortBy,
 }) {
+  // Active badges let users clear one filter at a time without resetting everything.
   const activeBadges = [
     searchTerm && ['Search', searchTerm, () => setSearchTerm('')],
     activeFilter !== 'All' && ['Trust', activeFilter, () => setActiveFilter('All')],
@@ -456,6 +469,7 @@ function SearchFilters({
   );
 }
 
+// Reusable product card used by the catalog grid.
 function ProductCard({
   compareSelected,
   onAddToCart,
@@ -525,6 +539,7 @@ function ProductCard({
   );
 }
 
+// Simple skeleton placeholders shown while filters are "loading".
 function SkeletonGrid() {
   return (
     <div className="products-grid" aria-label="Loading products">
@@ -539,6 +554,7 @@ function SkeletonGrid() {
   );
 }
 
+// Empty catalog state after filters remove every product.
 function EmptyState({ onClear }) {
   return (
     <div className="empty-state">
@@ -549,6 +565,7 @@ function EmptyState({ onClear }) {
   );
 }
 
+// Product listing section that connects filters with the card grid.
 function ProductCatalog({
   compareIds,
   isLoading,
@@ -593,6 +610,7 @@ function ProductCatalog({
   );
 }
 
+// Detail page for the currently selected product, including a trust breakdown.
 function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
   const trustScore = calculateTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
@@ -673,6 +691,7 @@ function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
   );
 }
 
+// Wishlist view. Moving to cart also removes the item from the saved list.
 function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
   return (
     <section className="wishlist-section reveal" id="wishlist">
@@ -713,6 +732,7 @@ function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
   );
 }
 
+// Side-by-side comparison modal for two or three selected products.
 function ComparisonModal({ compareProducts, onAddToCart, onClose }) {
   if (compareProducts.length < 2) {
     return null;
@@ -768,6 +788,7 @@ function ComparisonModal({ compareProducts, onAddToCart, onClose }) {
   );
 }
 
+// Interactive demo where users can change signals and see the score update live.
 function TrustCalculator() {
   const [demo, setDemo] = useState({
     price: 700,
@@ -833,6 +854,7 @@ function TrustCalculator() {
   );
 }
 
+// Educational sections: stats, guide steps, FAQ, and testimonials.
 function EducationSections() {
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -889,6 +911,7 @@ function EducationSections() {
   );
 }
 
+// Floating shortcut appears only after the user scrolls down.
 function BackToTop() {
   const [visible, setVisible] = useState(false);
 
@@ -913,9 +936,12 @@ function BackToTop() {
 }
 
 function App() {
+  // Stored state survives refreshes in this browser.
   const [theme, setTheme] = useStoredState('trustcart-theme', 'dark');
   const [wishlistIds, setWishlistIds] = useStoredState('trustcart-wishlist', []);
   const [cartCount, setCartCount] = useStoredState('trustcart-cart-count', 0);
+
+  // Page state controls the current ecommerce flow.
   const [selectedProduct, setSelectedProduct] = useState(products[0]);
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [sortBy, setSortBy] = useState('featured');
@@ -929,6 +955,7 @@ function App() {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Read filters from the URL when the app first loads.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSearchTerm(params.get('q') || '');
@@ -939,6 +966,7 @@ function App() {
     setSelectedCategories(params.get('categories') ? params.get('categories').split(',') : []);
   }, []);
 
+  // Keep filters in the URL so refresh/share keeps the same catalog view.
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('q', searchTerm);
@@ -952,16 +980,19 @@ function App() {
     window.history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
   }, [priceMax, ratingMin, searchTerm, selectedCategories, selectedFilter, sortBy]);
 
+  // Theme is applied on the body so CSS variables can switch the full UI.
   useEffect(() => {
     document.body.dataset.theme = theme;
   }, [theme]);
 
+  // Short loading state makes filter/sort changes feel intentional.
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => setIsLoading(false), 350);
     return () => clearTimeout(timer);
   }, [priceMax, ratingMin, searchTerm, selectedCategories, selectedFilter, sortBy]);
 
+  // Main catalog pipeline: score products, filter them, then sort the final list.
   const productsToShow = useMemo(() => {
     const scoredProducts = products.map((product) => {
       const trustScore = calculateTrustScore(product);
@@ -994,16 +1025,19 @@ function App() {
   const wishlistProducts = products.filter((product) => wishlistIds.includes(product.id));
   const compareProducts = products.filter((product) => compareIds.includes(product.id));
 
+  // Demo cart stores only a count because checkout is outside this prototype.
   function addToCart() {
     setCartCount((count) => count + 1);
   }
 
+  // Wishlist ids are stored instead of full product objects to avoid duplicated product data.
   function toggleWishlist(productId) {
     setWishlistIds((ids) =>
       ids.includes(productId) ? ids.filter((id) => id !== productId) : [...ids, productId]
     );
   }
 
+  // Limit comparison to three products so the modal stays readable.
   function toggleCompare(productId) {
     setCompareIds((ids) => {
       if (ids.includes(productId)) {
@@ -1018,6 +1052,7 @@ function App() {
     });
   }
 
+  // Restores the catalog to the default unfiltered view.
   function clearFilters() {
     setSearchTerm('');
     setSelectedFilter('All');

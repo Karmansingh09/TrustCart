@@ -1,4 +1,5 @@
 function calculateTrustScore(product) {
+  // Start from a perfect score and subtract points for risky product signals.
   let score = 100;
   const averagePrice = product.avgPrice || product.averagePrice;
 

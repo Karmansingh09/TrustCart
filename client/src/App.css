@@ -1,3 +1,4 @@
+/* Main color tokens used across the dark TrustCart theme. */
 :root {
   --bg: #050507;
   --card: #0a0a0f;
@@ -10,6 +11,7 @@
   --surface: rgba(255, 255, 255, 0.04);
 }
 
+/* Light mode swaps the same tokens, so component styles do not need duplication. */
 body[data-theme='light'] {
   --bg: #f5f7fb;
   --card: #ffffff;
@@ -22,6 +24,7 @@ body[data-theme='light'] {
   --surface: rgba(15, 23, 42, 0.045);
 }
 
+/* Global app defaults. */
 html {
   scroll-behavior: smooth;
 }
@@ -44,6 +47,7 @@ select {
   background-size: auto, 80px 80px, 80px 80px, auto;
 }
 
+/* Visible focus rings improve keyboard accessibility. */
 button,
 a,
 input,
@@ -58,6 +62,7 @@ select:focus-visible {
   outline: 3px solid var(--accent);
 }
 
+/* Sticky ecommerce header and navigation. */
 .site-header {
   position: sticky;
   top: 0;
@@ -115,6 +120,7 @@ select:focus-visible {
   cursor: pointer;
 }
 
+/* Shared spacing for major page sections. */
 .hero-section,
 .engine-section,
 .catalog-section,
@@ -127,6 +133,7 @@ select:focus-visible {
   padding: 76px 24px;
 }
 
+/* First-screen hero layout. */
 .hero-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 0.82fr);
@@ -135,6 +142,7 @@ select:focus-visible {
   min-height: calc(100vh - 76px);
 }
 
+/* Small technical label used throughout the premium UI. */
 .mono-label,
 .engine-card-label,
 .engine-status {
@@ -177,6 +185,7 @@ select:focus-visible {
   font-size: 1.12rem;
 }
 
+/* Primary and secondary action button styles. */
 .primary-link,
 .secondary-link,
 .primary-button,
@@ -223,6 +232,7 @@ select:focus-visible {
   background: var(--surface);
 }
 
+/* Shared card surfaces for product, detail, modal, and education blocks. */
 .hero-product,
 .product-card,
 .detail-panel,
@@ -239,6 +249,7 @@ select:focus-visible {
   background: color-mix(in srgb, var(--card) 90%, transparent);
 }
 
+/* Featured product image behavior in the hero. */
 .hero-product {
   position: relative;
   overflow: hidden;
@@ -294,6 +305,7 @@ select:focus-visible {
   font-size: 2rem;
 }
 
+/* Wishlist heart button used on product cards and detail media. */
 .wishlist-button {
   position: absolute;
   top: 16px;
@@ -314,6 +326,7 @@ select:focus-visible {
   box-shadow: 0 0 24px rgba(255, 122, 162, 0.35);
 }
 
+/* Trust engine cards below the hero. */
 .engine-header {
   display: flex;
   align-items: flex-end;
@@ -417,6 +430,7 @@ select:focus-visible {
   margin-bottom: 26px;
 }
 
+/* Catalog search, filters, sorting, and active badges. */
 .filter-shell,
 .catalog-toolbar,
 .active-filters {
@@ -520,6 +534,7 @@ select:focus-visible {
   background: #8b1e3f;
 }
 
+/* Product grid and reusable product card styles. */
 .products-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 22px;
@@ -612,6 +627,7 @@ select:focus-visible {
   color: var(--muted);
 }
 
+/* Warning shown only when a product is risky. */
 .warning-text {
   margin: 16px 0 0;
   padding: 10px 12px;
@@ -651,6 +667,7 @@ select:focus-visible {
   animation: shimmer 1.2s infinite;
 }
 
+/* Sticky comparison action bar. */
 .compare-bar {
   position: sticky;
   bottom: 18px;
@@ -668,6 +685,7 @@ select:focus-visible {
   backdrop-filter: blur(18px);
 }
 
+/* Product detail page with breadcrumb and score breakdown. */
 .detail-section {
   display: grid;
   gap: 18px;
@@ -725,6 +743,7 @@ select:focus-visible {
   margin-top: 22px;
 }
 
+/* Wishlist list view. */
 .wishlist-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -737,6 +756,7 @@ select:focus-visible {
   padding: 16px;
 }
 
+/* Comparison modal and table. */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -787,6 +807,7 @@ select:focus-visible {
   margin-top: 18px;
 }
 
+/* Interactive trust score calculator. */
 .calculator-grid {
   grid-template-columns: 0.9fr 1.1fr;
   padding: 24px;
@@ -825,6 +846,7 @@ select:focus-visible {
   font-weight: 900;
 }
 
+/* Educational stats, guide, FAQ, and testimonials. */
 .stats-grid,
 .how-grid,
 .testimonial-grid {
@@ -888,6 +910,7 @@ select:focus-visible {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+/* Floating shortcut for long pages. */
 .back-to-top {
   position: fixed;
   right: 18px;
@@ -903,6 +926,7 @@ select:focus-visible {
   text-decoration: none;
 }
 
+/* Utility class for screen-reader-only text. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -911,6 +935,7 @@ select:focus-visible {
   clip: rect(0, 0, 0, 0);
 }
 
+/* Tablet layout adjustments. */
 @media (max-width: 1040px) {
   .hero-section,
   .detail-layout,
@@ -933,6 +958,7 @@ select:focus-visible {
   }
 }
 
+/* Mobile layout: stack controls and collapse the filter panel. */
 @media (max-width: 760px) {
   .site-header,
   .catalog-toolbar,
@@ -999,6 +1025,7 @@ select:focus-visible {
   }
 }
 
+/* Shared entrance animation. */
 @keyframes revealUp {
   from {
     opacity: 0;
@@ -1011,6 +1038,7 @@ select:focus-visible {
   }
 }
 
+/* Loading shimmer used by skeleton product cards. */
 @keyframes shimmer {
   from {
     background-position: 200% 0;
@@ -1021,6 +1049,7 @@ select:focus-visible {
   }
 }
 
+/* Respect users who prefer reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
