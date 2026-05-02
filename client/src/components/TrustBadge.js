@@ -25,6 +25,7 @@ function TrustBadge({ trustScore }) {
     fontSize: '14px',
     fontWeight: '700',
     boxShadow: `0 0 18px ${glowColor}, 0 8px 16px rgba(0, 0, 0, 0.22)`,
+    animation: 'badgeSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both',
   };
 
   return <span style={badgeStyle}>{label} ({trustScore})</span>;
