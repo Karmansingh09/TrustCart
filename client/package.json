@@ -1,7 +1,16 @@
 {
-  "name": "client",
+  "name": "trustcart-client",
+  "description": "TrustCart React frontend – smart e-commerce with real-time product trust scoring",
   "version": "0.1.0",
   "private": true,
+  "keywords": [
+    "e-commerce",
+    "react",
+    "fake-product-detection",
+    "trust-score",
+    "product-verification"
+  ],
+  "homepage": "https://github.com/Karmansingh09/TrustCart",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -12,11 +21,16 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src/**/*.{js,jsx}",
+    "format": "prettier --write \"src/**/*.{js,jsx,css}\""
   },
   "eslintConfig": {
     "extends": [
