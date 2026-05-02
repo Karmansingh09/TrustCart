@@ -1,70 +1,77 @@
-# Getting Started with Create React App
+# TrustCart – Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React frontend for TrustCart, a smart e-commerce platform with real-time product trust scoring.
 
-## Available Scripts
+## Setup
 
-In the project directory, you can run:
+```bash
+cd client
+npm install
+cp .env.example .env
+npm start
+```
 
-### `npm start`
+The app runs at `http://localhost:3000`.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Folder structure
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+client/
+├── public/               # Static assets and HTML template
+└── src/
+    ├── components/       # Reusable UI components
+    │   ├── Header.js         – Site header and navigation
+    │   ├── Hero.js           – Featured product hero section
+    │   ├── TrustEngineSection.js – Trust engine feature cards
+    │   ├── ProductCard.js    – Individual product card with trust badge
+    │   ├── ProductCatalog.js – Product grid with filters and sorting
+    │   ├── ProductDetail.js  – Full trust review panel for a product
+    │   └── TrustBadge.js     – Coloured trust score badge
+    ├── utils/            # Pure helper functions
+    │   ├── calculateTrustScore.js  – Core trust score algorithm
+    │   ├── calculateTrustScore.test.js
+    │   └── trustHelpers.js   – getTrustLabel / getTrustMessage helpers
+    ├── App.js            – Root component; holds product data and state
+    ├── App.css           – Global styles
+    ├── App.test.js       – Integration tests for the full page
+    ├── index.js          – React DOM entry point
+    └── index.css         – Base CSS reset
+```
 
-### `npm test`
+## Available scripts
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Command | Description |
+|---|---|
+| `npm start` | Start development server at `http://localhost:3000` |
+| `npm test` | Run tests in watch mode |
+| `npm run build` | Create optimised production build in `build/` |
+| `npm run format` | Auto-format source files with Prettier |
 
-### `npm run build`
+## Testing
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Tests use [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+# Run all tests once (CI mode)
+CI=true npm test
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Run in watch mode
+npm test
+```
 
-### `npm run eject`
+- `src/App.test.js` – page-level integration tests
+- `src/utils/calculateTrustScore.test.js` – unit tests for the trust score algorithm
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Environment variables
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Copy `.env.example` to `.env` and fill in the values:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+| Variable | Description |
+|---|---|
+| `REACT_APP_API_URL` | Backend API base URL |
+| `REACT_APP_ENABLE_CART` | Feature flag – enable cart |
+| `REACT_APP_ENABLE_TRUST_SCORE` | Feature flag – enable trust score display |
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Contributing
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+See [`FRONTEND_CONTRIBUTING.md`](../FRONTEND_CONTRIBUTING.md) in the repository root for guidelines on creating components, code style, and the pull request process.
