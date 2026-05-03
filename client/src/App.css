@@ -79,7 +79,7 @@ select:focus-visible {
 
 .brand,
 .nav-links a,
-.cart-link,
+.header-action,
 .primary-link,
 .secondary-link {
   color: var(--text);
@@ -102,13 +102,31 @@ select:focus-visible {
 }
 
 .nav-links a,
-.cart-link {
+.header-action {
   color: color-mix(in srgb, var(--text) 70%, transparent);
   font-size: 0.9rem;
   font-weight: 700;
 }
 
-.cart-link,
+.header-actions {
+  align-items: center;
+  gap: 10px;
+}
+
+.header-action {
+  position: relative;
+  display: grid;
+  align-content: center;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  padding: 8px 40px 8px 14px;
+  color: var(--text);
+  background: var(--surface);
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
 .icon-button,
 .ghost-button {
   min-height: 40px;
@@ -118,6 +136,56 @@ select:focus-visible {
   background: var(--surface);
   font-weight: 800;
   cursor: pointer;
+}
+
+.header-action:hover {
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  transform: translateY(-1px);
+}
+
+.header-action span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.header-action strong {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.header-action em {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 86%, #38f4d8);
+  box-shadow: 0 0 18px var(--accent-glow);
+  font-size: 0.76rem;
+  font-style: normal;
+  transform: translateY(-50%);
+}
+
+.theme-action {
+  padding-right: 14px;
+}
+
+.cart-action {
+  min-width: 118px;
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, var(--surface)), var(--surface));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent-glow) 66%, transparent);
 }
 
 /* Shared spacing for major page sections. */
@@ -379,10 +447,12 @@ select:focus-visible {
 }
 
 .engine-card {
-  min-height: 430px;
+  min-height: 450px;
   padding: 34px;
   border: 1px solid var(--border);
-  background: var(--card);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--card-strong) 68%, transparent), var(--card)),
+    var(--card);
   transition: background-color 250ms ease, border-color 250ms ease, transform 250ms ease;
 }
 
@@ -410,16 +480,32 @@ select:focus-visible {
 
 .engine-image {
   position: relative;
-  min-height: 180px;
+  overflow: hidden;
+  min-height: 220px;
   border: 1px solid var(--border);
-  filter: grayscale(1) contrast(1.25);
-  transition: border-color 350ms ease, filter 350ms ease;
+  filter: saturate(0.88) contrast(1.08) brightness(0.82);
+  transition: border-color 350ms ease, filter 350ms ease, transform 350ms ease;
+}
+
+.engine-image::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background:
+    linear-gradient(180deg, rgba(5, 5, 7, 0.02), rgba(5, 5, 7, 0.48)),
+    radial-gradient(circle at 18% 14%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 36%);
+}
+
+.engine-card:hover .engine-image {
+  filter: saturate(1.05) contrast(1.05) brightness(0.94);
+  transform: scale(1.01);
 }
 
 .engine-image span {
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 1;
   padding: 6px 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
   color: var(--accent);
@@ -1017,6 +1103,16 @@ select:focus-visible {
 
   .catalog-toolbar.open {
     display: flex;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .header-action {
+    min-width: 0;
   }
 
   .filter-group,

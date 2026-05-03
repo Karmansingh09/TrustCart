@@ -69,13 +69,40 @@ const mockProducts = [
   },
 ];
 
+const headphoneProducts = [
+  {
+    id: 6,
+    name: 'SoundMax Headphones',
+    category: 'Audio',
+    price: 199,
+    avgPrice: 220,
+    sellerRating: 4.5,
+    reviews: 312,
+    historyScore: 88,
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+    description: 'Over-ear headphones with deep bass, long battery life, and a well-rated seller.',
+    trustScore: 100,
+  },
+];
+
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
+  global.fetch = jest.fn((url) => {
+    const urlText = String(url);
+    let responseProducts = mockProducts;
+
+    if (urlText.includes('search=headphones')) {
+      responseProducts = headphoneProducts;
+    }
+
+    if (urlText.includes('search=watch')) {
+      responseProducts = mockProducts.filter((product) => product.name.toLowerCase().includes('watch'));
+    }
+
+    return Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockProducts),
-    })
-  );
+      json: () => Promise.resolve(responseProducts),
+    });
+  });
   localStorage.clear();
   window.history.replaceState(null, '', '/');
   document.body.dataset.theme = '';
@@ -141,6 +168,24 @@ test('searches and filters products dynamically', async () => {
   });
 
   expect(window.location.search).toContain('q=watch');
+  expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/api/products?search=watch');
+});
+
+test('fetches matching products from the backend when searching a new product', async () => {
+  render(<App />);
+
+  fireEvent.change(screen.getByLabelText(/search products/i), {
+    target: { value: 'headphones' },
+  });
+
+  await waitFor(async () => {
+    const productGrid = await getProductGrid();
+
+    expect(within(productGrid).getByRole('heading', { name: /soundmax headphones/i })).toBeInTheDocument();
+    expect(within(productGrid).queryByRole('heading', { name: /zenphone pro/i })).not.toBeInTheDocument();
+  });
+
+  expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/api/products?search=headphones');
 });
 
 test('filters risky products and sorts by trust score', async () => {

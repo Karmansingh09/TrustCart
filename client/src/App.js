@@ -54,25 +54,25 @@ const engineCards = [
     number: '01',
     label: 'ANALYZE',
     title: 'Fake Product Signals',
-    description: 'TrustCart scans suspicious pricing, seller rating drops, and low-review listings.',
+    description: 'TrustCart checks listing photos, price anomalies, seller drops, and low-review products.',
     tag: 'SCAN: ACTIVE',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=700&q=80',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=900&q=80',
   },
   {
     number: '02',
     label: 'SCORE',
     title: 'Trust Score Engine',
-    description: 'Every product receives a simple safety score before the buyer reaches checkout.',
+    description: 'Every product gets a safety score from pricing, reviews, seller rating, and history.',
     tag: 'MODEL: TRUST',
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=700&q=80',
+    image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=900&q=80',
   },
   {
     number: '03',
     label: 'WARN',
     title: 'Buyer Risk Alerts',
-    description: 'Safe, medium, and risky product states help shoppers decide what to do next.',
+    description: 'Clear risk states warn shoppers before they add suspicious products to cart.',
     tag: 'ALERTS: LIVE',
-    image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=700&q=80',
+    image: 'https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?auto=format&fit=crop&w=900&q=80',
   },
 ];
 
@@ -128,6 +128,54 @@ function normalizeProduct(product, index) {
     ...normalizedProduct,
     trustScore: Number(product.trustScore ?? calculateTrustScore(normalizedProduct)),
   };
+}
+
+function toTitleCase(text) {
+  return text
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function guessCategory(searchValue) {
+  const query = searchValue.toLowerCase();
+
+  if (query.includes('phone')) return 'Phones';
+  if (query.includes('laptop')) return 'Laptops';
+  if (query.includes('watch')) return 'Wearables';
+  if (query.includes('headphone') || query.includes('earbud') || query.includes('speaker')) return 'Audio';
+  if (query.includes('tablet')) return 'Tablets';
+  if (query.includes('camera')) return 'Electronics';
+  return 'General';
+}
+
+function createSearchFallbackProduct(searchValue) {
+  const category = guessCategory(searchValue);
+  const price = Math.max(19, Math.min(999, searchValue.length * 17));
+
+  return normalizeProduct(
+    {
+      id: 900000 + searchValue.length,
+      name: `${toTitleCase(searchValue)} Product`,
+      category,
+      price,
+      avgPrice: Math.round(price * 1.25),
+      sellerRating: 4.1,
+      reviews: 42,
+      image: fallbackImages[0],
+      description: `Demo search result for "${searchValue}" shown when no API product is found.`,
+      trustScore: 100,
+    },
+    0
+  );
+}
+
+function productMatchesSearch(product, searchValue) {
+  const query = searchValue.toLowerCase();
+  const haystack = `${product.name} ${product.category} ${product.description}`.toLowerCase();
+
+  return haystack.includes(query);
 }
 
 // Prefer the backend score. The fallback keeps the UI working during local development.
@@ -212,13 +260,20 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist
         <a href="#education">Learn</a>
       </nav>
       <div className="header-actions">
-        <button aria-label="Toggle dark and light mode" className="icon-button" onClick={onThemeToggle} type="button">
-          {theme === 'dark' ? 'Light' : 'Dark'}
+        <button aria-label="Toggle dark and light mode" className="header-action theme-action" onClick={onThemeToggle} type="button">
+          <span>Theme</span>
+          <strong>{theme === 'dark' ? 'Light' : 'Dark'}</strong>
         </button>
-        <button className="cart-link" onClick={onViewWishlist} type="button">
-          Wishlist ({wishlistCount})
+        <button aria-label={`Wishlist (${wishlistCount})`} className="header-action" onClick={onViewWishlist} type="button">
+          <span>Saved</span>
+          <strong>Wishlist</strong>
+          <em>{wishlistCount}</em>
         </button>
-        <a className="cart-link" href="#products">Cart ({cartCount})</a>
+        <a aria-label={`Cart (${cartCount})`} className="header-action cart-action" href="#products">
+          <span>Checkout</span>
+          <strong>Cart</strong>
+          <em>{cartCount}</em>
+        </a>
       </div>
     </header>
   );
@@ -936,14 +991,18 @@ function App() {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch products from the Express backend when the app starts.
+  // Fetch products from the Express backend. Search text is sent to the API too.
   // Falls back to local mock data if the API is unreachable.
   useEffect(() => {
     let isMounted = true;
+    const searchValue = searchTerm.trim();
+    const apiUrl = searchValue
+      ? `${PRODUCTS_API_URL}?search=${encodeURIComponent(searchValue)}`
+      : PRODUCTS_API_URL;
 
     setApiLoading(true);
 
-    fetch(PRODUCTS_API_URL)
+    fetch(apiUrl)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Product API responded with status ' + response.status);
@@ -952,20 +1011,35 @@ function App() {
       })
       .then((apiProducts) => {
         if (!isMounted) return;
-        const normalizedProducts = apiProducts.map((product, index) => normalizeProduct(product, index));
+        let normalizedProducts = apiProducts.map((product, index) => normalizeProduct(product, index));
+
+        if (searchValue && normalizedProducts.length === 0) {
+          normalizedProducts = [createSearchFallbackProduct(searchValue)];
+        }
+
         setProducts(normalizedProducts);
         setSelectedProduct(normalizedProducts[0] || null);
         setApiError('');
-        console.log('✅ Loaded', normalizedProducts.length, 'products from API.');
+        console.log('Loaded', normalizedProducts.length, 'products from API.');
       })
       .catch((error) => {
-        console.warn('⚠️ API unavailable, using local fallback data. Error:', error.message);
+        console.warn('API unavailable, using local fallback data. Error:', error.message);
         if (isMounted) {
-          // Load fallback data so search and filters still work
-          const normalizedFallback = fallbackProducts.map((product, index) => normalizeProduct(product, index));
+          let fallbackSource = fallbackProducts;
+
+          if (searchValue) {
+            fallbackSource = fallbackProducts.filter((product) => productMatchesSearch(product, searchValue));
+          }
+
+          let normalizedFallback = fallbackSource.map((product, index) => normalizeProduct(product, index));
+
+          if (searchValue && normalizedFallback.length === 0) {
+            normalizedFallback = [createSearchFallbackProduct(searchValue)];
+          }
+
           setProducts(normalizedFallback);
           setSelectedProduct(normalizedFallback[0] || null);
-          setApiError('⚠️ Showing demo data — backend offline. Run: node server.js in /server');
+          setApiError('Showing demo data because the backend is offline. Run: node server.js in /server');
         }
       })
       .finally(() => {
@@ -977,7 +1051,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [searchTerm]);
 
   // Read filters from the URL when the app first loads.
   useEffect(() => {
