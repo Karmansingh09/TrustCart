@@ -397,90 +397,106 @@ function SearchFilters({
       <div className="search-row">
         <label className="search-control">
           <span>Search products</span>
-          <input
-            aria-label="Search products"
-            list="product-suggestions"
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search phones, audio, seller signals..."
-            type="search"
-            value={searchTerm}
-          />
+          <div className="search-input-wrap">
+            <input
+              aria-label="Search products"
+              list="product-suggestions"
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search phones, audio, laptops..."
+              type="search"
+              value={searchTerm}
+            />
+          </div>
           <datalist id="product-suggestions">
             {productOptions.map((product) => (
               <option key={product.id} value={product.name} />
             ))}
           </datalist>
         </label>
+        <div className="search-panel-note" aria-hidden="true">
+          <span>{productOptions.length}</span>
+          <strong>products scanned</strong>
+        </div>
         <button className="secondary-button mobile-filter-button" onClick={() => setFilterPanelOpen(!filterPanelOpen)} type="button">
           {filterPanelOpen ? 'Hide Filters' : 'Show Filters'}
         </button>
       </div>
 
       <div className={filterPanelOpen ? 'catalog-toolbar open' : 'catalog-toolbar'}>
-        <div className="filter-group" aria-label="Filter by trust score">
-          {trustFilters.map((filter) => (
-            <button
-              className={activeFilter === filter ? 'filter-button active' : 'filter-button'}
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              type="button"
-            >
-              {filter}
-            </button>
-          ))}
+        <div className="trust-filter-card">
+          <span className="control-label">Trust level</span>
+          <div className="filter-group" aria-label="Filter by trust score">
+            {trustFilters.map((filter) => (
+              <button
+                className={activeFilter === filter ? 'filter-button active' : 'filter-button'}
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                type="button"
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
         </div>
 
         <fieldset className="category-filter">
           <legend>Categories</legend>
-          {categories.map((category) => (
-            <label key={category}>
-              <input
-                checked={selectedCategories.includes(category)}
-                onChange={() =>
-                  setSelectedCategories((items) =>
-                    items.includes(category)
-                      ? items.filter((item) => item !== category)
-                      : [...items, category]
-                  )
-                }
-                type="checkbox"
-              />
-              {category}
-            </label>
-          ))}
+          <div className="category-options">
+            {categories.map((category) => (
+              <label className={selectedCategories.includes(category) ? 'category-chip selected' : 'category-chip'} key={category}>
+                <input
+                  checked={selectedCategories.includes(category)}
+                  onChange={() =>
+                    setSelectedCategories((items) =>
+                      items.includes(category)
+                        ? items.filter((item) => item !== category)
+                        : [...items, category]
+                    )
+                  }
+                  type="checkbox"
+                />
+                <span>{category}</span>
+              </label>
+            ))}
+          </div>
         </fieldset>
 
-        <label className="range-control">
-          Price up to ${priceMax}
-          <input
-            aria-label="Maximum price"
-            max="2000"
-            min="0"
-            onChange={(event) => setPriceMax(Number(event.target.value))}
-            step="50"
-            type="range"
-            value={priceMax}
-          />
-        </label>
+        <div className="advanced-filter-grid">
+          <label className="range-control">
+            <span className="range-header">
+              <span>Price limit</span>
+              <strong>${priceMax}</strong>
+            </span>
+            <input
+              aria-label="Maximum price"
+              max="2000"
+              min="0"
+              onChange={(event) => setPriceMax(Number(event.target.value))}
+              step="50"
+              type="range"
+              value={priceMax}
+            />
+          </label>
 
-        <label className="sort-control">
-          Seller rating
-          <select aria-label="Seller rating filter" value={ratingMin} onChange={(event) => setRatingMin(Number(event.target.value))}>
-            <option value="0">Any rating</option>
-            <option value="3">3+ rating</option>
-            <option value="4">4+ rating</option>
-            <option value="4.5">4.5+ rating</option>
-          </select>
-        </label>
+          <label className="sort-control">
+            <span>Seller rating</span>
+            <select aria-label="Seller rating filter" value={ratingMin} onChange={(event) => setRatingMin(Number(event.target.value))}>
+              <option value="0">Any rating</option>
+              <option value="3">3+ rating</option>
+              <option value="4">4+ rating</option>
+              <option value="4.5">4.5+ rating</option>
+            </select>
+          </label>
 
-        <label className="sort-control">
-          Sort
-          <select aria-label="Sort products" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-            <option value="featured">Featured</option>
-            <option value="price">Price: Low to High</option>
-            <option value="trust">Trust Score: High to Low</option>
-          </select>
-        </label>
+          <label className="sort-control">
+            <span>Sort</span>
+            <select aria-label="Sort products" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+              <option value="featured">Featured</option>
+              <option value="price">Price: Low to High</option>
+              <option value="trust">Trust Score: High to Low</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       <div className="active-filters" aria-label="Active filters">
@@ -611,12 +627,26 @@ function ProductCatalog({
   wishlistIds,
   ...filterProps
 }) {
+  const categoryCount = filterProps.categories ? filterProps.categories.length : 0;
+
   return (
     <section className="catalog-section reveal" id="products">
-      <div className="section-heading">
-        <p className="mono-label">Shop verified products</p>
-        <h2>Product catalog</h2>
-        <p>Filter by trust level, sort by price or score, and inspect each product before buying.</p>
+      <div className="section-heading catalog-heading">
+        <div>
+          <p className="mono-label">Shop verified products</p>
+          <h2>Product catalog</h2>
+          <p>Filter by trust level, sort by price or score, and inspect each product before buying.</p>
+        </div>
+        <div className="catalog-summary" aria-label="Catalog summary">
+          <span>
+            <strong>{productsToShow.length}</strong>
+            matches
+          </span>
+          <span>
+            <strong>{categoryCount}</strong>
+            categories
+          </span>
+        </div>
       </div>
 
       <SearchFilters clearFilter={onClearFilters} {...filterProps} />
