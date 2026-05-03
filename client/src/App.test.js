@@ -116,7 +116,16 @@ async function getProductGrid() {
   return screen.findByLabelText(/product results/i);
 }
 
+async function openProductsPage() {
+  fireEvent.click(screen.getByRole('link', { name: /^products$/i }));
+  return getProductGrid();
+}
+
 async function getCatalogCard(productName) {
+  if (!screen.queryByRole('heading', { name: /product catalog/i })) {
+    await openProductsPage();
+  }
+
   const productGrid = await getProductGrid();
   const productCards = within(productGrid).getAllByRole('article');
 
@@ -125,21 +134,30 @@ async function getCatalogCard(productName) {
   );
 }
 
-test('renders the premium homepage, engine, and learning sections', async () => {
+test('renders the premium homepage and navigates to app pages', async () => {
   render(<App />);
 
   expect(screen.getByRole('heading', { name: /shop smarter/i })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /explore products/i })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /product catalog/i })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('link', { name: /^engine$/i }));
   expect(screen.getByText(/02 \/\/ engine/i)).toBeInTheDocument();
   expect(screen.getByText(/ai-driven trust infrastructure/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('link', { name: /^calculator$/i }));
   expect(screen.getByRole('heading', { name: /trust score calculator/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('link', { name: /^learn$/i }));
   expect(screen.getByRole('heading', { name: /how trustcart protects shoppers/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('link', { name: /^products$/i }));
   expect(await screen.findByRole('heading', { name: /product catalog/i })).toBeInTheDocument();
 });
 
 test('renders product catalog with search, filters, and trust badges', async () => {
   render(<App />);
-  const productGrid = await getProductGrid();
+  const productGrid = await openProductsPage();
 
   expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/api/products');
   expect(screen.getByLabelText(/search products/i)).toBeInTheDocument();
@@ -153,8 +171,23 @@ test('renders product catalog with search, filters, and trust badges', async () 
   expect(within(productGrid).getByText(/risky \(30\)/i)).toBeInTheDocument();
 });
 
+test('shows a back button on inner pages and returns to the previous page', async () => {
+  render(<App />);
+
+  expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument();
+
+  await openProductsPage();
+  expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /back/i }));
+
+  expect(screen.getByRole('heading', { name: /shop smarter/i })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /product catalog/i })).not.toBeInTheDocument();
+});
+
 test('searches and filters products dynamically', async () => {
   render(<App />);
+  await openProductsPage();
 
   fireEvent.change(screen.getByLabelText(/search products/i), {
     target: { value: 'watch' },
@@ -173,6 +206,7 @@ test('searches and filters products dynamically', async () => {
 
 test('fetches matching products from the backend when searching a new product', async () => {
   render(<App />);
+  await openProductsPage();
 
   fireEvent.change(screen.getByLabelText(/search products/i), {
     target: { value: 'headphones' },
@@ -190,6 +224,7 @@ test('fetches matching products from the backend when searching a new product', 
 
 test('filters risky products and sorts by trust score', async () => {
   render(<App />);
+  await openProductsPage();
 
   fireEvent.click(screen.getByRole('button', { name: /^risky$/i }));
 
@@ -266,7 +301,7 @@ test('toggles light mode and adds products to cart', async () => {
   fireEvent.click(screen.getByRole('button', { name: /toggle dark and light mode/i }));
   expect(screen.getByRole('button', { name: /toggle dark and light mode/i })).toHaveTextContent(/dark/i);
 
-  const productGrid = await getProductGrid();
+  const productGrid = await openProductsPage();
   fireEvent.click(within(productGrid).getAllByRole('button', { name: /add to cart/i })[0]);
 
   expect(screen.getByRole('link', { name: /cart \(1\)/i })).toBeInTheDocument();
@@ -275,7 +310,7 @@ test('toggles light mode and adds products to cart', async () => {
 test('opens the cart page with quantity controls and totals', async () => {
   render(<App />);
 
-  const productGrid = await getProductGrid();
+  const productGrid = await openProductsPage();
   fireEvent.click(within(productGrid).getAllByRole('button', { name: /add to cart/i })[0]);
 
   fireEvent.click(screen.getByRole('link', { name: /cart \(1\)/i }));

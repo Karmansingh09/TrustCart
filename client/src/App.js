@@ -274,15 +274,39 @@ function useStoredState(key, initialValue) {
 }
 
 // Top navigation with theme, wishlist, and cart controls.
-function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewCart, onViewWishlist }) {
+function Header({
+  canGoBack,
+  cartCount,
+  currentPage,
+  wishlistCount,
+  onBack,
+  onNavigate,
+  onThemeToggle,
+  onViewCart,
+  onViewWishlist,
+  theme,
+}) {
+  function handleNavigate(event, page) {
+    event.preventDefault();
+    onNavigate(page);
+  }
+
   return (
     <header className="site-header">
-      <a className="brand" href="#home">TrustCart</a>
+      <div className="brand-area">
+        {canGoBack && (
+          <button className="back-button" onClick={onBack} type="button">
+            ← Back
+          </button>
+        )}
+        <a className="brand" href="#home" onClick={(event) => handleNavigate(event, 'home')}>TrustCart</a>
+      </div>
       <nav className="nav-links" aria-label="Primary navigation">
-        <a href="#engine">Engine</a>
-        <a href="#products">Products</a>
-        <a href="#calculator">Calculator</a>
-        <a href="#education">Learn</a>
+        <a aria-current={currentPage === 'home' ? 'page' : undefined} href="#home" onClick={(event) => handleNavigate(event, 'home')}>Home</a>
+        <a aria-current={currentPage === 'products' ? 'page' : undefined} href="#products" onClick={(event) => handleNavigate(event, 'products')}>Products</a>
+        <a aria-current={currentPage === 'engine' ? 'page' : undefined} href="#engine" onClick={(event) => handleNavigate(event, 'engine')}>Engine</a>
+        <a aria-current={currentPage === 'calculator' ? 'page' : undefined} href="#calculator" onClick={(event) => handleNavigate(event, 'calculator')}>Calculator</a>
+        <a aria-current={currentPage === 'learn' ? 'page' : undefined} href="#learn" onClick={(event) => handleNavigate(event, 'learn')}>Learn</a>
       </nav>
       <div className="header-actions">
         <button aria-label="Toggle dark and light mode" className="header-action theme-action" onClick={onThemeToggle} type="button">
@@ -294,7 +318,10 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewCart, on
           <strong>Wishlist</strong>
           <em>{wishlistCount}</em>
         </button>
-        <a aria-label={`Cart (${cartCount})`} className="header-action cart-action" href="#cart" onClick={onViewCart}>
+        <a aria-label={`Cart (${cartCount})`} className="header-action cart-action" href="#cart" onClick={(event) => {
+          event.preventDefault();
+          onViewCart();
+        }}>
           <span>Checkout</span>
           <strong>Cart</strong>
           <em>{cartCount}</em>
@@ -305,7 +332,7 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewCart, on
 }
 
 // Main hero area and featured product card.
-function Hero({ featuredProduct, onAddToCart, onWishlistToggle, isWishlisted }) {
+function Hero({ featuredProduct, onAddToCart, onNavigate, onWishlistToggle, isWishlisted }) {
   const trustScore = getProductTrustScore(featuredProduct);
 
   return (
@@ -318,8 +345,18 @@ function Hero({ featuredProduct, onAddToCart, onWishlistToggle, isWishlisted }) 
           purchase feels clearer before checkout.
         </p>
         <div className="hero-actions">
-          <a className="primary-link" href="#products">Explore Products</a>
-          <a className="secondary-link" href="#engine">View Trust Engine</a>
+          <a className="primary-link" href="#products" onClick={(event) => {
+            event.preventDefault();
+            onNavigate('products');
+          }}>
+            Explore Products
+          </a>
+          <a className="secondary-link" href="#engine" onClick={(event) => {
+            event.preventDefault();
+            onNavigate('engine');
+          }}>
+            View Trust Engine
+          </a>
         </div>
       </div>
 
@@ -699,7 +736,7 @@ function ProductCatalog({
 }
 
 // Detail page for the currently selected product, including a trust breakdown.
-function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
+function ProductDetail({ product, onAddToCart, onNavigate, onWishlistToggle, wishlisted }) {
   const trustScore = getProductTrustScore(product);
   const trustLabel = getTrustLabel(trustScore);
   const breakdown = calculateTrustBreakdown(product);
@@ -707,9 +744,19 @@ function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
   return (
     <section className="detail-section reveal" id="details" aria-label="Selected product trust review">
       <nav className="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#home">Home</a>
+        <a href="#home" onClick={(event) => {
+          event.preventDefault();
+          onNavigate('home');
+        }}>
+          Home
+        </a>
         <span>/</span>
-        <a href="#products">Products</a>
+        <a href="#products" onClick={(event) => {
+          event.preventDefault();
+          onNavigate('products');
+        }}>
+          Products
+        </a>
         <span>/</span>
         <strong>{product.name}</strong>
       </nav>
@@ -780,7 +827,7 @@ function ProductDetail({ product, onAddToCart, onWishlistToggle, wishlisted }) {
 }
 
 // Wishlist view. Moving to cart also removes the item from the saved list.
-function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
+function WishlistPage({ onAddToCart, onNavigate, onRemove, onSelect, products }) {
   return (
     <section className="wishlist-section reveal" id="wishlist">
       <div className="section-heading">
@@ -793,6 +840,9 @@ function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
         <div className="empty-state">
           <h3>Your wishlist is empty.</h3>
           <p>Use the heart icon on product cards to save products here.</p>
+          <button className="primary-button" onClick={() => onNavigate('products')} type="button">
+            Browse Products
+          </button>
         </div>
       ) : (
         <div className="wishlist-grid">
@@ -821,7 +871,7 @@ function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
 }
 
 // Full shopping cart page with quantity controls, totals, and checkout summary.
-function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onQuantityChange, onRemove, onSelect }) {
+function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onNavigate, onQuantityChange, onRemove, onSelect }) {
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   const estimatedTax = subtotal * 0.08;
   const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 12;
@@ -848,7 +898,9 @@ function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onQuanti
         <div className="empty-state cart-empty">
           <h3>Your cart is empty.</h3>
           <p>Add products from the catalog, then come back here to review your order.</p>
-          <a className="primary-link" href="#products">Browse Products</a>
+          <button className="primary-button" onClick={() => onNavigate('products')} type="button">
+            Browse Products
+          </button>
         </div>
       ) : (
         <div className="cart-layout">
@@ -1150,7 +1202,7 @@ function EducationSections() {
 }
 
 // Floating shortcut appears only after the user scrolls down.
-function BackToTop() {
+function BackToTop({ onNavigate }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -1167,7 +1219,10 @@ function BackToTop() {
   }
 
   return (
-    <a className="back-to-top" href="#home" aria-label="Back to top">
+    <a className="back-to-top" href="#home" aria-label="Back to home" onClick={(event) => {
+      event.preventDefault();
+      onNavigate('home');
+    }}>
       ↑
     </a>
   );
@@ -1180,6 +1235,8 @@ function App() {
   const [cartItems, setCartItems] = useStoredState('trustcart-cart-items', []);
 
   // Page state controls the current ecommerce flow.
+  const [currentPage, setCurrentPage] = useState('home');
+  const [pageHistory, setPageHistory] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [apiLoading, setApiLoading] = useState(true);
@@ -1192,8 +1249,6 @@ function App() {
   const [ratingMin, setRatingMin] = useState(0);
   const [compareIds, setCompareIds] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
-  const [wishlistOpen, setWishlistOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [checkoutNotice, setCheckoutNotice] = useState('');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -1409,108 +1464,177 @@ function App() {
     setRatingMin(0);
   }
 
-  return (
-    <main className="App">
-      <Header
-        cartCount={cartCount}
-        onViewCart={() => setCartOpen(true)}
-        onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        onViewWishlist={() => setWishlistOpen(!wishlistOpen)}
-        theme={theme}
-        wishlistCount={wishlistIds.length}
-      />
-      {products[0] ? (
+  function navigate(page) {
+    if (page !== currentPage) {
+      setPageHistory((history) => [...history, currentPage].slice(-12));
+      setCurrentPage(page);
+    }
+    setCompareOpen(false);
+  }
+
+  function goBack() {
+    setPageHistory((history) => {
+      const previousPage = history[history.length - 1] || 'home';
+
+      setCurrentPage(previousPage);
+      setCompareOpen(false);
+
+      return history.slice(0, -1);
+    });
+  }
+
+  function selectProduct(product) {
+    setSelectedProduct(product);
+    navigate('details');
+  }
+
+  function renderLoadingHome() {
+    return (
+      <section className="hero-section hero-loading" id="home">
+        <div className="hero-copy">
+          <p className="mono-label">Verified ecommerce intelligence</p>
+          <h1>Shop smarter. Avoid risky products.</h1>
+          <p>Loading products...</p>
+          <div className="hero-actions">
+            <a className="primary-link" href="#products" onClick={(event) => {
+              event.preventDefault();
+              navigate('products');
+            }}>
+              Explore Products
+            </a>
+            <a className="secondary-link" href="#engine" onClick={(event) => {
+              event.preventDefault();
+              navigate('engine');
+            }}>
+              View Trust Engine
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  function renderProductsPage() {
+    return (
+      <>
+        <ProductCatalog
+          activeFilter={selectedFilter}
+          categories={categoryOptions}
+          compareIds={compareIds}
+          filterPanelOpen={filterPanelOpen}
+          isLoading={apiLoading || isLoading}
+          onAddToCart={addToCart}
+          onClearFilters={clearFilters}
+          onCompareToggle={toggleCompare}
+          onSelect={selectProduct}
+          onWishlistToggle={toggleWishlist}
+          priceMax={priceMax}
+          productOptions={products}
+          productsToShow={productsToShow}
+          ratingMin={ratingMin}
+          searchTerm={searchTerm}
+          selectedCategories={selectedCategories}
+          setActiveFilter={setSelectedFilter}
+          setFilterPanelOpen={setFilterPanelOpen}
+          setPriceMax={setPriceMax}
+          setRatingMin={setRatingMin}
+          setSearchTerm={setSearchTerm}
+          setSelectedCategories={setSelectedCategories}
+          setSortBy={setSortBy}
+          sortBy={sortBy}
+          wishlistIds={wishlistIds}
+        />
+        <div className="compare-bar">
+          <span>{compareIds.length}/3 selected for comparison</span>
+          <button
+            className="primary-button"
+            disabled={compareIds.length < 2}
+            onClick={() => setCompareOpen(true)}
+            type="button"
+          >
+            Compare Products
+          </button>
+          <button className="secondary-button" onClick={() => setCompareIds([])} type="button">
+            Clear
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  function renderCurrentPage() {
+    if (currentPage === 'home') {
+      return products[0] ? (
         <Hero
           featuredProduct={products[0]}
           isWishlisted={wishlistIds.includes(products[0].id)}
           onAddToCart={addToCart}
+          onNavigate={navigate}
           onWishlistToggle={toggleWishlist}
         />
-      ) : (
-        <section className="hero-section hero-loading" id="home">
-          <div className="hero-copy">
-            <p className="mono-label">Verified ecommerce intelligence</p>
-            <h1>Shop smarter. Avoid risky products.</h1>
-            <p>Loading products...</p>
-            <div className="hero-actions">
-              <a className="primary-link" href="#products">Explore Products</a>
-              <a className="secondary-link" href="#engine">View Trust Engine</a>
-            </div>
-          </div>
-        </section>
-      )}
-      {apiError && <p className="api-error">{apiError}</p>}
-      <TrustEngineSection />
-      {wishlistOpen && (
+      ) : renderLoadingHome();
+    }
+
+    if (currentPage === 'engine') return <TrustEngineSection />;
+    if (currentPage === 'products') return renderProductsPage();
+    if (currentPage === 'calculator') return <TrustCalculator />;
+    if (currentPage === 'learn') return <EducationSections />;
+    if (currentPage === 'wishlist') {
+      return (
         <WishlistPage
           onAddToCart={addToCart}
+          onNavigate={navigate}
           onRemove={toggleWishlist}
-          onSelect={setSelectedProduct}
+          onSelect={selectProduct}
           products={wishlistProducts}
         />
-      )}
-      {cartOpen && (
+      );
+    }
+    if (currentPage === 'cart') {
+      return (
         <CartPage
           cartItems={cartItems}
           checkoutNotice={checkoutNotice}
           onCheckout={checkoutCart}
           onClearCart={clearCart}
+          onNavigate={navigate}
           onQuantityChange={updateCartQuantity}
           onRemove={removeCartItem}
-          onSelect={setSelectedProduct}
+          onSelect={selectProduct}
         />
-      )}
-      <ProductCatalog
-        activeFilter={selectedFilter}
-        categories={categoryOptions}
-        compareIds={compareIds}
-        filterPanelOpen={filterPanelOpen}
-        isLoading={apiLoading || isLoading}
-        onAddToCart={addToCart}
-        onClearFilters={clearFilters}
-        onCompareToggle={toggleCompare}
-        onSelect={setSelectedProduct}
-        onWishlistToggle={toggleWishlist}
-        priceMax={priceMax}
-        productOptions={products}
-        productsToShow={productsToShow}
-        ratingMin={ratingMin}
-        searchTerm={searchTerm}
-        selectedCategories={selectedCategories}
-        setActiveFilter={setSelectedFilter}
-        setFilterPanelOpen={setFilterPanelOpen}
-        setPriceMax={setPriceMax}
-        setRatingMin={setRatingMin}
-        setSearchTerm={setSearchTerm}
-        setSelectedCategories={setSelectedCategories}
-        setSortBy={setSortBy}
-        sortBy={sortBy}
-        wishlistIds={wishlistIds}
-      />
-      <div className="compare-bar">
-        <span>{compareIds.length}/3 selected for comparison</span>
-        <button
-          className="primary-button"
-          disabled={compareIds.length < 2}
-          onClick={() => setCompareOpen(true)}
-          type="button"
-        >
-          Compare Products
-        </button>
-        <button className="secondary-button" onClick={() => setCompareIds([])} type="button">
-          Clear
-        </button>
-      </div>
-      {selectedProduct && (
+      );
+    }
+    if (currentPage === 'details' && selectedProduct) {
+      return (
         <ProductDetail
           onAddToCart={addToCart}
+          onNavigate={navigate}
           onWishlistToggle={toggleWishlist}
           product={selectedProduct}
           wishlisted={wishlistIds.includes(selectedProduct.id)}
         />
-      )}
-      <TrustCalculator />
-      <EducationSections />
+      );
+    }
+
+    return renderProductsPage();
+  }
+
+  return (
+    <main className="App">
+      <Header
+        canGoBack={currentPage !== 'home' && pageHistory.length > 0}
+        cartCount={cartCount}
+        currentPage={currentPage}
+        onBack={goBack}
+        onNavigate={navigate}
+        onViewCart={() => navigate('cart')}
+        onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        onViewWishlist={() => navigate('wishlist')}
+        theme={theme}
+        wishlistCount={wishlistIds.length}
+      />
+      {apiError && <p className="api-error">{apiError}</p>}
+      {renderCurrentPage()}
       {compareOpen && (
         <ComparisonModal
           compareProducts={compareProducts}
@@ -1518,7 +1642,7 @@ function App() {
           onClose={() => setCompareOpen(false)}
         />
       )}
-      <BackToTop />
+      <BackToTop onNavigate={navigate} />
     </main>
   );
 }

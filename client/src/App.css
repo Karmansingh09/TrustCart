@@ -86,9 +86,34 @@ select:focus-visible {
   text-decoration: none;
 }
 
+.brand-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .brand {
   font-size: 1.15rem;
   font-weight: 900;
+}
+
+.back-button {
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  padding: 0 12px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 900;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.back-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent-glow) 42%, transparent);
+  transform: translateX(-2px);
 }
 
 .nav-links,
@@ -106,6 +131,11 @@ select:focus-visible {
   color: color-mix(in srgb, var(--text) 70%, transparent);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.nav-links a[aria-current='page'] {
+  color: var(--text);
+  text-shadow: 0 0 18px var(--accent-glow);
 }
 
 .header-actions {
@@ -200,6 +230,16 @@ select:focus-visible {
   width: min(1180px, 100%);
   margin: 0 auto;
   padding: 76px 24px;
+}
+
+.engine-section,
+.catalog-section,
+.cart-section,
+.detail-section,
+.wishlist-section,
+.calculator-section,
+.education-section {
+  min-height: calc(100vh - 78px);
 }
 
 /* First-screen hero layout. */
