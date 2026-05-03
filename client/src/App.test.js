@@ -271,3 +271,29 @@ test('toggles light mode and adds products to cart', async () => {
 
   expect(screen.getByRole('link', { name: /cart \(1\)/i })).toBeInTheDocument();
 });
+
+test('opens the cart page with quantity controls and totals', async () => {
+  render(<App />);
+
+  const productGrid = await getProductGrid();
+  fireEvent.click(within(productGrid).getAllByRole('button', { name: /add to cart/i })[0]);
+
+  fireEvent.click(screen.getByRole('link', { name: /cart \(1\)/i }));
+
+  const cartItems = screen.getByLabelText(/cart items/i);
+  const orderSummary = screen.getByLabelText(/order summary/i);
+
+  expect(screen.getByRole('heading', { name: /shopping cart/i })).toBeInTheDocument();
+  expect(cartItems).toBeInTheDocument();
+  expect(within(cartItems).getByRole('heading', { name: /zenphone pro/i })).toBeInTheDocument();
+  expect(orderSummary).toHaveTextContent('$899.00');
+
+  fireEvent.click(screen.getByRole('button', { name: /increase zenphone pro quantity/i }));
+  expect(screen.getByRole('link', { name: /cart \(2\)/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /decrease zenphone pro quantity/i }));
+  expect(screen.getByRole('link', { name: /cart \(1\)/i })).toBeInTheDocument();
+
+  fireEvent.click(within(cartItems).getByRole('button', { name: /^remove$/i }));
+  expect(screen.getByText(/your cart is empty/i)).toBeInTheDocument();
+});

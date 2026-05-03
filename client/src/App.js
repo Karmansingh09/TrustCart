@@ -274,7 +274,7 @@ function useStoredState(key, initialValue) {
 }
 
 // Top navigation with theme, wishlist, and cart controls.
-function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist }) {
+function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewCart, onViewWishlist }) {
   return (
     <header className="site-header">
       <a className="brand" href="#home">TrustCart</a>
@@ -294,7 +294,7 @@ function Header({ cartCount, wishlistCount, theme, onThemeToggle, onViewWishlist
           <strong>Wishlist</strong>
           <em>{wishlistCount}</em>
         </button>
-        <a aria-label={`Cart (${cartCount})`} className="header-action cart-action" href="#products">
+        <a aria-label={`Cart (${cartCount})`} className="header-action cart-action" href="#cart" onClick={onViewCart}>
           <span>Checkout</span>
           <strong>Cart</strong>
           <em>{cartCount}</em>
@@ -820,6 +820,134 @@ function WishlistPage({ onAddToCart, onRemove, onSelect, products }) {
   );
 }
 
+// Full shopping cart page with quantity controls, totals, and checkout summary.
+function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onQuantityChange, onRemove, onSelect }) {
+  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const estimatedTax = subtotal * 0.08;
+  const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 12;
+  const total = subtotal + estimatedTax + shipping;
+  const riskyCount = cartItems.filter((item) => getProductTrustScore(item) < 50).length;
+  const safeCount = cartItems.filter((item) => getProductTrustScore(item) >= 80).length;
+
+  return (
+    <section className="cart-section reveal" id="cart">
+      <div className="section-heading cart-heading">
+        <div>
+          <p className="mono-label">Secure checkout</p>
+          <h2>Shopping cart</h2>
+          <p>Review quantities, trust signals, and estimated totals before checkout.</p>
+        </div>
+        <div className="cart-trust-strip" aria-label="Cart trust summary">
+          <span><strong>{cartItems.length}</strong> items</span>
+          <span><strong>{safeCount}</strong> safe</span>
+          <span><strong>{riskyCount}</strong> risky</span>
+        </div>
+      </div>
+
+      {cartItems.length === 0 ? (
+        <div className="empty-state cart-empty">
+          <h3>Your cart is empty.</h3>
+          <p>Add products from the catalog, then come back here to review your order.</p>
+          <a className="primary-link" href="#products">Browse Products</a>
+        </div>
+      ) : (
+        <div className="cart-layout">
+          <div className="cart-items" aria-label="Cart items">
+            {cartItems.map((item) => {
+              const trustScore = getProductTrustScore(item);
+              const trustLabel = getTrustLabel(trustScore);
+
+              return (
+                <article className="cart-item" key={item.id}>
+                  <button className="cart-item-media" onClick={() => onSelect(item)} type="button">
+                    <span className="sr-only">View {item.name}</span>
+                    <span style={{ backgroundImage: `url('${item.image}')` }} />
+                  </button>
+
+                  <div className="cart-item-main">
+                    <div>
+                      <p className="mono-label">{item.category}</p>
+                      <h3>{item.name}</h3>
+                      <p>{item.description}</p>
+                    </div>
+
+                    <div className={`cart-risk-note ${trustLabel.toLowerCase()}`}>
+                      <strong>{trustLabel}</strong>
+                      <span>{getTrustMessage(trustScore)}</span>
+                    </div>
+                  </div>
+
+                  <div className="cart-item-side">
+                    <div className="cart-badge-wrap">
+                      <TrustBadge trustScore={trustScore} />
+                    </div>
+                    <strong className="cart-price">${item.price}</strong>
+                    <div className="quantity-control" aria-label={`${item.name} quantity`}>
+                      <button
+                        aria-label={`Decrease ${item.name} quantity`}
+                        onClick={() => onQuantityChange(item.id, item.quantity - 1)}
+                        type="button"
+                      >
+                        -
+                      </button>
+                      <span>{item.quantity}</span>
+                      <button
+                        aria-label={`Increase ${item.name} quantity`}
+                        onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span className="cart-line-total">${item.price * item.quantity}</span>
+                    <button className="ghost-button" onClick={() => onRemove(item.id)} type="button">
+                      Remove
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <aside className="order-summary" aria-label="Order summary">
+            <p className="mono-label">Order summary</p>
+            <h3>Checkout estimate</h3>
+
+            <div className="summary-row">
+              <span>Subtotal</span>
+              <strong>${subtotal.toFixed(2)}</strong>
+            </div>
+            <div className="summary-row">
+              <span>Estimated tax</span>
+              <strong>${estimatedTax.toFixed(2)}</strong>
+            </div>
+            <div className="summary-row">
+              <span>Shipping</span>
+              <strong>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</strong>
+            </div>
+            <div className="summary-row total">
+              <span>Total</span>
+              <strong>${total.toFixed(2)}</strong>
+            </div>
+
+            {riskyCount > 0 && (
+              <p className="checkout-warning">Review risky products before placing this order.</p>
+            )}
+            {checkoutNotice && <p className="checkout-success">{checkoutNotice}</p>}
+
+            <button className="primary-button checkout-button" onClick={onCheckout} type="button">
+              Checkout Demo
+            </button>
+            <button className="secondary-button checkout-button" onClick={onClearCart} type="button">
+              Clear Cart
+            </button>
+          </aside>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // Side-by-side comparison modal for two or three selected products.
 function ComparisonModal({ compareProducts, onAddToCart, onClose }) {
   if (compareProducts.length < 2) {
@@ -1049,7 +1177,7 @@ function App() {
   // Stored state survives refreshes in this browser.
   const [theme, setTheme] = useStoredState('trustcart-theme', 'dark');
   const [wishlistIds, setWishlistIds] = useStoredState('trustcart-wishlist', []);
-  const [cartCount, setCartCount] = useStoredState('trustcart-cart-count', 0);
+  const [cartItems, setCartItems] = useStoredState('trustcart-cart-items', []);
 
   // Page state controls the current ecommerce flow.
   const [products, setProducts] = useState([]);
@@ -1065,6 +1193,8 @@ function App() {
   const [compareIds, setCompareIds] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState('');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -1204,10 +1334,47 @@ function App() {
 
   const wishlistProducts = products.filter((product) => wishlistIds.includes(product.id));
   const compareProducts = products.filter((product) => compareIds.includes(product.id));
+  const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
-  // Demo cart stores only a count because checkout is outside this prototype.
-  function addToCart() {
-    setCartCount((count) => count + 1);
+  // Cart stores product snapshots so items stay available even after a new search.
+  function addToCart(product) {
+    const cartProduct = normalizeProduct(product, 0);
+
+    setCheckoutNotice('');
+    setCartItems((items) => {
+      const existingItem = items.find((item) => item.id === cartProduct.id);
+
+      if (existingItem) {
+        return items.map((item) =>
+          item.id === cartProduct.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+
+      return [...items, { ...cartProduct, quantity: 1 }];
+    });
+  }
+
+  function updateCartQuantity(productId, quantity) {
+    setCheckoutNotice('');
+    setCartItems((items) =>
+      items
+        .map((item) => (item.id === productId ? { ...item, quantity } : item))
+        .filter((item) => item.quantity > 0)
+    );
+  }
+
+  function removeCartItem(productId) {
+    setCheckoutNotice('');
+    setCartItems((items) => items.filter((item) => item.id !== productId));
+  }
+
+  function clearCart() {
+    setCheckoutNotice('');
+    setCartItems([]);
+  }
+
+  function checkoutCart() {
+    setCheckoutNotice('Demo checkout ready. Your cart has been reviewed with TrustCart safety signals.');
   }
 
   // Wishlist ids are stored instead of full product objects to avoid duplicated product data.
@@ -1246,6 +1413,7 @@ function App() {
     <main className="App">
       <Header
         cartCount={cartCount}
+        onViewCart={() => setCartOpen(true)}
         onThemeToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
         onViewWishlist={() => setWishlistOpen(!wishlistOpen)}
         theme={theme}
@@ -1279,6 +1447,17 @@ function App() {
           onRemove={toggleWishlist}
           onSelect={setSelectedProduct}
           products={wishlistProducts}
+        />
+      )}
+      {cartOpen && (
+        <CartPage
+          cartItems={cartItems}
+          checkoutNotice={checkoutNotice}
+          onCheckout={checkoutCart}
+          onClearCart={clearCart}
+          onQuantityChange={updateCartQuantity}
+          onRemove={removeCartItem}
+          onSelect={setSelectedProduct}
         />
       )}
       <ProductCatalog
