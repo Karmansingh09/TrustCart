@@ -97,11 +97,36 @@ const faqs = [
 ];
 
 const testimonials = [
-  ['Aarav M.', 'TrustCart made it obvious which listings needed a second look.'],
-  ['Nia S.', 'The side-by-side comparison is exactly how ecommerce should work.'],
-  ['Karman C.', 'The trust badges make the storefront feel safer and cleaner.'],
-  ['Maya R.', 'I like that risky products are not hidden, just explained clearly.'],
-  ['Dev P.', 'The filters and wishlist make this feel like a real shopping app.'],
+  {
+    name: 'Aarav M.',
+    role: 'Verified buyer',
+    rating: '5.0',
+    quote: 'TrustCart made suspicious listings easy to spot before I opened checkout.',
+  },
+  {
+    name: 'Nia S.',
+    role: 'Comparison shopper',
+    rating: '4.9',
+    quote: 'The side-by-side comparison helped me pick the safer deal in seconds.',
+  },
+  {
+    name: 'Karman C.',
+    role: 'Marketplace seller',
+    rating: '5.0',
+    quote: 'The trust badges make the storefront feel cleaner, safer, and more premium.',
+  },
+  {
+    name: 'Maya R.',
+    role: 'Careful shopper',
+    rating: '4.8',
+    quote: 'Risky products are not hidden. They are explained clearly so I can decide.',
+  },
+  {
+    name: 'Dev P.',
+    role: 'Daily shopper',
+    rating: '4.9',
+    quote: 'The filters and wishlist make this feel like a real shopping app.',
+  },
 ];
 
 // Normalize API products so the UI has safe values for every card field.
@@ -961,12 +986,34 @@ function EducationSections() {
         ))}
       </div>
 
+      <div className="testimonial-header">
+        <div>
+          <p className="mono-label">Customer proof</p>
+          <h3>Shoppers feel safer before they buy</h3>
+        </div>
+        <p>Real decisions become easier when price, seller quality, and review signals are visible.</p>
+      </div>
+
       <div className="testimonial-grid">
-        {testimonials.map(([name, quote]) => (
-          <figure key={name}>
-            <div className="avatar" aria-hidden="true">{name.charAt(0)}</div>
-            <blockquote>{quote}</blockquote>
-            <figcaption>{name}</figcaption>
+        {testimonials.map((testimonial) => (
+          <figure className="testimonial-card" key={testimonial.name}>
+            <div className="testimonial-top">
+              <div className="avatar" aria-hidden="true">
+                {testimonial.name
+                  .split(' ')
+                  .map((part) => part.charAt(0))
+                  .join('')}
+              </div>
+              <figcaption>
+                <strong>{testimonial.name}</strong>
+                <span>{testimonial.role}</span>
+              </figcaption>
+              <div className="testimonial-rating" aria-label={`${testimonial.rating} out of 5 rating`}>
+                {testimonial.rating}
+              </div>
+            </div>
+            <blockquote>{testimonial.quote}</blockquote>
+            <div className="testimonial-line" aria-hidden="true" />
           </figure>
         ))}
       </div>

@@ -1192,8 +1192,9 @@ select:focus-visible {
 
 .stats-grid span,
 .how-grid p,
-.testimonial-grid blockquote,
-.testimonial-grid figcaption {
+.testimonial-card blockquote,
+.testimonial-card figcaption span,
+.testimonial-header p {
   color: var(--muted);
 }
 
@@ -1230,8 +1231,124 @@ select:focus-visible {
   text-align: left;
 }
 
+.testimonial-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 22px;
+  margin: 34px 0 16px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), transparent),
+    color-mix(in srgb, var(--card) 84%, transparent);
+}
+
+.testimonial-header h3 {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 1.55rem;
+}
+
+.testimonial-header p:last-child {
+  max-width: 430px;
+  margin: 0;
+  line-height: 1.55;
+}
+
 .testimonial-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 0;
+}
+
+.testimonial-card {
+  position: relative;
+  display: grid;
+  min-height: 245px;
+  align-content: space-between;
+  gap: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 20%, transparent), transparent 38%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.testimonial-card::before {
+  content: '"';
+  position: absolute;
+  right: 18px;
+  bottom: -26px;
+  color: color-mix(in srgb, var(--accent) 20%, transparent);
+  font-family: Georgia, serif;
+  font-size: 8rem;
+  line-height: 1;
+}
+
+.testimonial-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34), 0 0 28px color-mix(in srgb, var(--accent-glow) 38%, transparent);
+  transform: translateY(-5px);
+}
+
+.testimonial-top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.testimonial-card .avatar {
+  margin-bottom: 0;
+  background: linear-gradient(135deg, var(--accent), #38f4d8);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent-glow) 65%, transparent);
+}
+
+.testimonial-card figcaption {
+  display: grid;
+  gap: 3px;
+}
+
+.testimonial-card figcaption strong {
+  color: var(--text);
+}
+
+.testimonial-card figcaption span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.testimonial-rating {
+  display: grid;
+  min-width: 48px;
+  min-height: 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 28%, var(--surface));
+  font-weight: 950;
+}
+
+.testimonial-card blockquote {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 92%;
+  color: color-mix(in srgb, var(--text) 84%, var(--muted));
+  font-size: 1.02rem;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.testimonial-line {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #38f4d8, transparent);
 }
 
 /* Floating shortcut for long pages. */
@@ -1280,6 +1397,10 @@ select:focus-visible {
   .detail-media {
     min-height: 380px;
   }
+
+  .testimonial-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Mobile layout: stack controls and collapse the filter panel. */
@@ -1322,6 +1443,20 @@ select:focus-visible {
 
   .catalog-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .testimonial-header,
+  .testimonial-top {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .testimonial-header {
+    flex-direction: column;
+  }
+
+  .testimonial-grid {
+    grid-template-columns: 1fr;
   }
 
   .mobile-filter-button {
