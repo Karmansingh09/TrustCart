@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import TrustBadge from './components/TrustBadge';
 import calculateTrustScore from './utils/calculateTrustScore';
@@ -870,12 +870,18 @@ function WishlistPage({ onAddToCart, onNavigate, onRemove, onSelect, products })
   );
 }
 
-// Full shopping cart page with quantity controls, totals, and checkout summary.
-function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onNavigate, onQuantityChange, onRemove, onSelect }) {
+function calculateCartTotals(cartItems) {
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
   const estimatedTax = subtotal * 0.08;
   const shipping = subtotal === 0 || subtotal >= 250 ? 0 : 12;
   const total = subtotal + estimatedTax + shipping;
+
+  return { estimatedTax, shipping, subtotal, total };
+}
+
+// Full shopping cart page with quantity controls, totals, and checkout summary.
+function CartPage({ cartItems, onCheckout, onClearCart, onNavigate, onQuantityChange, onRemove, onSelect }) {
+  const { estimatedTax, shipping, subtotal, total } = calculateCartTotals(cartItems);
   const riskyCount = cartItems.filter((item) => getProductTrustScore(item) < 50).length;
   const safeCount = cartItems.filter((item) => getProductTrustScore(item) >= 80).length;
 
@@ -985,10 +991,9 @@ function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onNaviga
             {riskyCount > 0 && (
               <p className="checkout-warning">Review risky products before placing this order.</p>
             )}
-            {checkoutNotice && <p className="checkout-success">{checkoutNotice}</p>}
 
             <button className="primary-button checkout-button" onClick={onCheckout} type="button">
-              Checkout Demo
+              Continue to Checkout
             </button>
             <button className="secondary-button checkout-button" onClick={onClearCart} type="button">
               Clear Cart
@@ -996,6 +1001,240 @@ function CartPage({ cartItems, checkoutNotice, onCheckout, onClearCart, onNaviga
           </aside>
         </div>
       )}
+    </section>
+  );
+}
+
+// Demo checkout flow: shipping details, payment demo, and order confirmation.
+function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
+  const [step, setStep] = useState('shipping');
+  const [orderItems, setOrderItems] = useState([]);
+  const [orderNumber, setOrderNumber] = useState('');
+  const [shippingInfo, setShippingInfo] = useState({
+    name: '',
+    email: '',
+    address: '',
+    city: '',
+    postalCode: '',
+  });
+  const [paymentInfo, setPaymentInfo] = useState({
+    cardName: '',
+    cardNumber: '',
+    expiry: '',
+  });
+  const activeItems = step === 'placed' ? orderItems : cartItems;
+  const { estimatedTax, shipping, subtotal, total } = calculateCartTotals(activeItems);
+
+  function updateShipping(field, value) {
+    setShippingInfo((info) => ({ ...info, [field]: value }));
+  }
+
+  function updatePayment(field, value) {
+    setPaymentInfo((info) => ({ ...info, [field]: value }));
+  }
+
+  function submitShipping(event) {
+    event.preventDefault();
+    setStep('payment');
+  }
+
+  function submitPayment(event) {
+    event.preventDefault();
+    setOrderItems(cartItems);
+    setOrderNumber(`TC-${Date.now().toString().slice(-6)}`);
+    setStep('placed');
+    onClearCart();
+  }
+
+  if (cartItems.length === 0 && step !== 'placed') {
+    return (
+      <section className="checkout-section reveal" id="checkout">
+        <div className="empty-state cart-empty">
+          <h3>Your checkout is empty.</h3>
+          <p>Add products to your cart before starting checkout.</p>
+          <button className="primary-button" onClick={() => onNavigate('products')} type="button">
+            Browse Products
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="checkout-section reveal" id="checkout">
+      <div className="section-heading checkout-heading">
+        <div>
+          <p className="mono-label">Checkout flow</p>
+          <h2>
+            {step === 'shipping' && 'Shipping details'}
+            {step === 'payment' && 'Payment demo'}
+            {step === 'placed' && 'Order placed'}
+          </h2>
+          <p>Complete the demo checkout with TrustCart risk signals visible until the final order.</p>
+        </div>
+        <div className="checkout-steps" aria-label="Checkout progress">
+          <span className={step === 'shipping' ? 'active' : ''}>1. Shipping</span>
+          <span className={step === 'payment' ? 'active' : ''}>2. Payment</span>
+          <span className={step === 'placed' ? 'active' : ''}>3. Placed</span>
+        </div>
+      </div>
+
+      <div className="checkout-layout">
+        <div className="checkout-panel">
+          {step === 'shipping' && (
+            <form className="checkout-form" onSubmit={submitShipping}>
+              <label>
+                Full name
+                <input
+                  onChange={(event) => updateShipping('name', event.target.value)}
+                  placeholder="Karman Singh"
+                  required
+                  value={shippingInfo.name}
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  onChange={(event) => updateShipping('email', event.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  type="email"
+                  value={shippingInfo.email}
+                />
+              </label>
+              <label className="wide-field">
+                Address
+                <input
+                  onChange={(event) => updateShipping('address', event.target.value)}
+                  placeholder="Street address"
+                  required
+                  value={shippingInfo.address}
+                />
+              </label>
+              <label>
+                City
+                <input
+                  onChange={(event) => updateShipping('city', event.target.value)}
+                  placeholder="New Delhi"
+                  required
+                  value={shippingInfo.city}
+                />
+              </label>
+              <label>
+                ZIP / Postal code
+                <input
+                  onChange={(event) => updateShipping('postalCode', event.target.value)}
+                  placeholder="110001"
+                  required
+                  value={shippingInfo.postalCode}
+                />
+              </label>
+              <div className="checkout-actions">
+                <button className="secondary-button" onClick={() => onNavigate('cart')} type="button">
+                  Back to Cart
+                </button>
+                <button className="primary-button" type="submit">
+                  Continue to Payment
+                </button>
+              </div>
+            </form>
+          )}
+
+          {step === 'payment' && (
+            <form className="checkout-form" onSubmit={submitPayment}>
+              <div className="demo-payment-note">
+                <strong>Demo payment only</strong>
+                <span>No real card is charged. Use any test details to place the sample order.</span>
+              </div>
+              <label>
+                Name on card
+                <input
+                  onChange={(event) => updatePayment('cardName', event.target.value)}
+                  placeholder="Karman Singh"
+                  required
+                  value={paymentInfo.cardName}
+                />
+              </label>
+              <label>
+                Card number
+                <input
+                  inputMode="numeric"
+                  onChange={(event) => updatePayment('cardNumber', event.target.value)}
+                  placeholder="4242 4242 4242 4242"
+                  required
+                  value={paymentInfo.cardNumber}
+                />
+              </label>
+              <label>
+                Expiry
+                <input
+                  onChange={(event) => updatePayment('expiry', event.target.value)}
+                  placeholder="12/30"
+                  required
+                  value={paymentInfo.expiry}
+                />
+              </label>
+              <div className="checkout-actions">
+                <button className="secondary-button" onClick={() => setStep('shipping')} type="button">
+                  Back to Shipping
+                </button>
+                <button className="primary-button" type="submit">
+                  Place Demo Order
+                </button>
+              </div>
+            </form>
+          )}
+
+          {step === 'placed' && (
+            <div className="order-placed-panel">
+              <div className="success-mark" aria-hidden="true">✓</div>
+              <h3>Order placed successfully</h3>
+              <p>Your TrustCart demo order has been reviewed and submitted.</p>
+              <div className="order-number">
+                <span>Order number</span>
+                <strong>{orderNumber}</strong>
+              </div>
+              <div className="checkout-actions">
+                <button className="primary-button" onClick={() => onNavigate('products')} type="button">
+                  Continue Shopping
+                </button>
+                <button className="secondary-button" onClick={() => onNavigate('home')} type="button">
+                  Go Home
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <aside className="order-summary checkout-summary" aria-label="Checkout summary">
+          <p className="mono-label">Order review</p>
+          <h3>{activeItems.length} item{activeItems.length === 1 ? '' : 's'}</h3>
+          <div className="checkout-items">
+            {activeItems.map((item) => (
+              <div className="checkout-item" key={item.id}>
+                <span>{item.name}</span>
+                <strong>{item.quantity} × ${item.price}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <strong>${subtotal.toFixed(2)}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Estimated tax</span>
+            <strong>${estimatedTax.toFixed(2)}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Shipping</span>
+            <strong>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</strong>
+          </div>
+          <div className="summary-row total">
+            <span>Total</span>
+            <strong>${total.toFixed(2)}</strong>
+          </div>
+        </aside>
+      </div>
     </section>
   );
 }
@@ -1249,7 +1488,6 @@ function App() {
   const [ratingMin, setRatingMin] = useState(0);
   const [compareIds, setCompareIds] = useState([]);
   const [compareOpen, setCompareOpen] = useState(false);
-  const [checkoutNotice, setCheckoutNotice] = useState('');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -1395,7 +1633,6 @@ function App() {
   function addToCart(product) {
     const cartProduct = normalizeProduct(product, 0);
 
-    setCheckoutNotice('');
     setCartItems((items) => {
       const existingItem = items.find((item) => item.id === cartProduct.id);
 
@@ -1410,7 +1647,6 @@ function App() {
   }
 
   function updateCartQuantity(productId, quantity) {
-    setCheckoutNotice('');
     setCartItems((items) =>
       items
         .map((item) => (item.id === productId ? { ...item, quantity } : item))
@@ -1419,17 +1655,11 @@ function App() {
   }
 
   function removeCartItem(productId) {
-    setCheckoutNotice('');
     setCartItems((items) => items.filter((item) => item.id !== productId));
   }
 
   function clearCart() {
-    setCheckoutNotice('');
     setCartItems([]);
-  }
-
-  function checkoutCart() {
-    setCheckoutNotice('Demo checkout ready. Your cart has been reviewed with TrustCart safety signals.');
   }
 
   // Wishlist ids are stored instead of full product objects to avoid duplicated product data.
@@ -1594,8 +1824,7 @@ function App() {
       return (
         <CartPage
           cartItems={cartItems}
-          checkoutNotice={checkoutNotice}
-          onCheckout={checkoutCart}
+          onCheckout={() => navigate('checkout')}
           onClearCart={clearCart}
           onNavigate={navigate}
           onQuantityChange={updateCartQuantity}
@@ -1603,6 +1832,13 @@ function App() {
           onSelect={selectProduct}
         />
       );
+    }
+    if (currentPage === 'checkout') {
+      return React.createElement(CheckoutPage, {
+        cartItems,
+        onClearCart: clearCart,
+        onNavigate: navigate,
+      });
     }
     if (currentPage === 'details' && selectedProduct) {
       return (

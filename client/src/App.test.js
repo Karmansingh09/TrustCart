@@ -332,3 +332,32 @@ test('opens the cart page with quantity controls and totals', async () => {
   fireEvent.click(within(cartItems).getByRole('button', { name: /^remove$/i }));
   expect(screen.getByText(/your cart is empty/i)).toBeInTheDocument();
 });
+
+test('completes the demo checkout flow', async () => {
+  render(<App />);
+
+  const productGrid = await openProductsPage();
+  fireEvent.click(within(productGrid).getAllByRole('button', { name: /add to cart/i })[0]);
+  fireEvent.click(screen.getByRole('link', { name: /cart \(1\)/i }));
+  fireEvent.click(screen.getByRole('button', { name: /continue to checkout/i }));
+
+  expect(screen.getByRole('heading', { name: /shipping details/i })).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Karman Singh' } });
+  fireEvent.change(screen.getByLabelText(/^email$/i), { target: { value: 'karman@example.com' } });
+  fireEvent.change(screen.getByLabelText(/address/i), { target: { value: '123 Trust Street' } });
+  fireEvent.change(screen.getByLabelText(/^city$/i), { target: { value: 'New Delhi' } });
+  fireEvent.change(screen.getByLabelText(/zip/i), { target: { value: '110001' } });
+  fireEvent.click(screen.getByRole('button', { name: /continue to payment/i }));
+
+  expect(screen.getByRole('heading', { name: /payment demo/i })).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/name on card/i), { target: { value: 'Karman Singh' } });
+  fireEvent.change(screen.getByLabelText(/card number/i), { target: { value: '4242 4242 4242 4242' } });
+  fireEvent.change(screen.getByLabelText(/expiry/i), { target: { value: '12/30' } });
+  fireEvent.click(screen.getByRole('button', { name: /place demo order/i }));
+
+  expect(screen.getByRole('heading', { name: /order placed successfully/i })).toBeInTheDocument();
+  expect(screen.getByText(/TC-/i)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /cart \(0\)/i })).toBeInTheDocument();
+});

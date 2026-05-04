@@ -223,6 +223,7 @@ select:focus-visible {
 .engine-section,
 .catalog-section,
 .cart-section,
+.checkout-section,
 .detail-section,
 .wishlist-section,
 .calculator-section,
@@ -235,6 +236,7 @@ select:focus-visible {
 .engine-section,
 .catalog-section,
 .cart-section,
+.checkout-section,
 .detail-section,
 .wishlist-section,
 .calculator-section,
@@ -353,6 +355,7 @@ select:focus-visible {
 .wishlist-item,
 .cart-item,
 .order-summary,
+.checkout-panel,
 .calculator-grid,
 .empty-state,
 .compare-modal,
@@ -1381,6 +1384,190 @@ select:focus-visible {
   gap: 10px;
 }
 
+/* Checkout flow screens. */
+.checkout-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: none;
+}
+
+.checkout-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(108px, 1fr));
+  gap: 10px;
+}
+
+.checkout-steps span {
+  min-height: 48px;
+  border: 1px solid var(--border);
+  padding: 14px 12px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.checkout-steps span.active {
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 54%, #38f4d8));
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--accent-glow) 52%, transparent);
+}
+
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.checkout-panel {
+  min-height: 520px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 16%, transparent), transparent 36%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.checkout-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.checkout-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.checkout-form input {
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  padding: 0 13px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg) 36%, transparent);
+}
+
+.checkout-form input:focus {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.wide-field,
+.demo-payment-note,
+.checkout-actions {
+  grid-column: 1 / -1;
+}
+
+.demo-payment-note {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.demo-payment-note strong {
+  color: var(--text);
+}
+
+.checkout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.checkout-summary {
+  top: 98px;
+}
+
+.checkout-items {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0;
+}
+
+.checkout-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.checkout-item strong {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.order-placed-panel {
+  display: grid;
+  min-height: 440px;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.success-mark {
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  color: #052e16;
+  background: linear-gradient(135deg, #86efac, #38f4d8);
+  border-radius: 50%;
+  box-shadow: 0 0 38px rgba(56, 244, 216, 0.35);
+  font-size: 2.2rem;
+  font-weight: 950;
+}
+
+.order-placed-panel h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.order-placed-panel p {
+  max-width: 480px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.order-number {
+  display: grid;
+  gap: 5px;
+  min-width: 220px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: var(--surface);
+}
+
+.order-number span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.order-number strong {
+  color: var(--text);
+  font-size: 1.35rem;
+}
+
 /* Comparison modal and table. */
 .modal-backdrop {
   position: fixed;
@@ -1685,6 +1872,7 @@ select:focus-visible {
   .products-grid,
   .calculator-grid,
   .cart-layout,
+  .checkout-layout,
   .stats-grid,
   .how-grid,
   .testimonial-grid,
@@ -1728,6 +1916,7 @@ select:focus-visible {
   .engine-section,
   .catalog-section,
   .cart-section,
+  .checkout-section,
   .detail-section,
   .wishlist-section,
   .calculator-section,
@@ -1750,6 +1939,7 @@ select:focus-visible {
 
   .testimonial-header,
   .cart-heading,
+  .checkout-heading,
   .testimonial-top {
     align-items: start;
     grid-template-columns: 1fr;
@@ -1761,6 +1951,28 @@ select:focus-visible {
 
   .cart-heading {
     flex-direction: column;
+  }
+
+  .checkout-heading {
+    flex-direction: column;
+  }
+
+  .checkout-steps {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .checkout-form {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-actions {
+    justify-content: stretch;
+  }
+
+  .checkout-actions .primary-button,
+  .checkout-actions .secondary-button {
+    width: 100%;
   }
 
   .cart-trust-strip {
