@@ -331,10 +331,8 @@ function Header({
   );
 }
 
-// Main hero area and featured product card.
-function Hero({ featuredProduct, onAddToCart, onNavigate, onWishlistToggle, isWishlisted }) {
-  const trustScore = getProductTrustScore(featuredProduct);
-
+// Main hero area with a trust scanner preview instead of a single product card.
+function Hero({ onNavigate }) {
   return (
     <section className="hero-section" id="home">
       <div className="hero-copy">
@@ -360,27 +358,52 @@ function Hero({ featuredProduct, onAddToCart, onNavigate, onWishlistToggle, isWi
         </div>
       </div>
 
-      <article className="hero-product">
-        <TrustBadge trustScore={trustScore} />
-        <button
-          aria-label={isWishlisted ? 'Remove featured product from wishlist' : 'Add featured product to wishlist'}
-          className={isWishlisted ? 'wishlist-button active' : 'wishlist-button'}
-          onClick={() => onWishlistToggle(featuredProduct.id)}
-          type="button"
-        >
-          ♥
-        </button>
-        <div className="hero-product-image" style={{ backgroundImage: `url('${featuredProduct.image}')` }} />
-        <div className="hero-product-content">
-          <p className="mono-label">Featured verified pick</p>
-          <h2>{featuredProduct.name}</h2>
-          <p>{featuredProduct.description}</p>
-          <div className="hero-price-row">
-            <strong>${featuredProduct.price}</strong>
-            <button className="primary-button" onClick={() => onAddToCart(featuredProduct)} type="button">
-              Add to Cart
-            </button>
+      <article className="hero-trust-panel" aria-label="TrustCart safety preview">
+        <div className="hero-panel-header">
+          <div>
+            <p className="mono-label">Live marketplace scan</p>
+            <h2>Trust signals before checkout</h2>
           </div>
+          <span>Online</span>
+        </div>
+
+        <div className="hero-score-preview">
+          <div className="hero-score-ring">
+            <strong>92</strong>
+            <span>Trust Score</span>
+          </div>
+          <div className="hero-scan-copy">
+            <h3>Verified shopping mode</h3>
+            <p>Search products, compare risk signals, and avoid suspicious deals before you buy.</p>
+          </div>
+        </div>
+
+        <div className="hero-signal-list">
+          <div>
+            <span>Price check</span>
+            <strong>Market match</strong>
+          </div>
+          <div>
+            <span>Seller rating</span>
+            <strong>4.8 / 5</strong>
+          </div>
+          <div>
+            <span>Review quality</span>
+            <strong>Verified</strong>
+          </div>
+        </div>
+
+        <div className="hero-risk-strip">
+          <span className="safe">Safe</span>
+          <span className="medium">Medium</span>
+          <span className="risky">Risky</span>
+        </div>
+
+        <div className="hero-panel-action">
+          <button className="primary-button" onClick={() => onNavigate('products')} type="button">
+            Start Product Search
+          </button>
+          <span>3-step safety review</span>
         </div>
       </article>
     </section>
@@ -1718,32 +1741,6 @@ function App() {
     navigate('details');
   }
 
-  function renderLoadingHome() {
-    return (
-      <section className="hero-section hero-loading" id="home">
-        <div className="hero-copy">
-          <p className="mono-label">Verified ecommerce intelligence</p>
-          <h1>Shop smarter. Avoid risky products.</h1>
-          <p>Loading products...</p>
-          <div className="hero-actions">
-            <a className="primary-link" href="#products" onClick={(event) => {
-              event.preventDefault();
-              navigate('products');
-            }}>
-              Explore Products
-            </a>
-            <a className="secondary-link" href="#engine" onClick={(event) => {
-              event.preventDefault();
-              navigate('engine');
-            }}>
-              View Trust Engine
-            </a>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   function renderProductsPage() {
     return (
       <>
@@ -1794,15 +1791,7 @@ function App() {
 
   function renderCurrentPage() {
     if (currentPage === 'home') {
-      return products[0] ? (
-        <Hero
-          featuredProduct={products[0]}
-          isWishlisted={wishlistIds.includes(products[0].id)}
-          onAddToCart={addToCart}
-          onNavigate={navigate}
-          onWishlistToggle={toggleWishlist}
-        />
-      ) : renderLoadingHome();
+      return <Hero onNavigate={navigate} />;
     }
 
     if (currentPage === 'engine') return <TrustEngineSection />;
