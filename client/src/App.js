@@ -5,6 +5,7 @@ import calculateTrustScore from './utils/calculateTrustScore';
 import { fallbackProducts } from './utils/mockData';
 
 const PRODUCTS_API_URL = 'http://localhost:5000/api/products';
+const ORDERS_API_URL = 'http://localhost:5000/api/orders';
 
 // UI fallback details keep the cards polished if the API only sends basic product fields.
 const productDisplayFallbacks = {
@@ -307,6 +308,7 @@ function Header({
         <a aria-current={currentPage === 'engine' ? 'page' : undefined} href="#engine" onClick={(event) => handleNavigate(event, 'engine')}>Engine</a>
         <a aria-current={currentPage === 'calculator' ? 'page' : undefined} href="#calculator" onClick={(event) => handleNavigate(event, 'calculator')}>Calculator</a>
         <a aria-current={currentPage === 'learn' ? 'page' : undefined} href="#learn" onClick={(event) => handleNavigate(event, 'learn')}>Learn</a>
+        <a aria-current={currentPage === 'admin' ? 'page' : undefined} href="#admin" onClick={(event) => handleNavigate(event, 'admin')}>Admin</a>
       </nav>
       <div className="header-actions">
         <button aria-label="Toggle dark and light mode" className="header-action theme-action" onClick={onThemeToggle} type="button">
@@ -1029,10 +1031,12 @@ function CartPage({ cartItems, onCheckout, onClearCart, onNavigate, onQuantityCh
 }
 
 // Demo checkout flow: shipping details, payment demo, and order confirmation.
-function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
+function CheckoutPage({ cartItems, onClearCart, onNavigate, onOrderPlaced }) {
   const [step, setStep] = useState('shipping');
   const [orderItems, setOrderItems] = useState([]);
   const [orderNumber, setOrderNumber] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [shippingInfo, setShippingInfo] = useState({
     name: '',
     email: '',
@@ -1061,12 +1065,67 @@ function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
     setStep('payment');
   }
 
-  function submitPayment(event) {
+  async function submitPayment(event) {
     event.preventDefault();
-    setOrderItems(cartItems);
-    setOrderNumber(`TC-${Date.now().toString().slice(-6)}`);
-    setStep('placed');
-    onClearCart();
+    setCheckoutError('');
+    setIsSubmitting(true);
+
+    var orderPayload = {
+      customer: shippingInfo,
+      payment: paymentInfo,
+      items: cartItems,
+    };
+
+    try {
+      var response = await fetch(ORDERS_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Order API responded with status ' + response.status);
+      }
+
+      var savedOrder = await response.json();
+
+      setOrderItems(savedOrder.items || cartItems);
+      setOrderNumber(savedOrder.orderNumber);
+      onOrderPlaced(savedOrder);
+      setStep('placed');
+      onClearCart();
+    } catch (error) {
+      console.warn('Order API unavailable, using local demo order. Error:', error.message);
+
+      var fallbackOrder = {
+        id: Date.now(),
+        orderNumber: `TC-${Date.now().toString().slice(-6)}`,
+        status: 'Placed',
+        createdAt: new Date().toISOString(),
+        customer: shippingInfo,
+        items: cartItems,
+        totals: calculateCartTotals(cartItems),
+        trustSummary: {
+          safeCount: cartItems.filter((item) => getProductTrustScore(item) >= 80).length,
+          mediumCount: cartItems.filter((item) => {
+            var score = getProductTrustScore(item);
+            return score >= 50 && score < 80;
+          }).length,
+          riskyCount: cartItems.filter((item) => getProductTrustScore(item) < 50).length,
+        },
+      };
+
+      setCheckoutError('Backend offline, so TrustCart placed a local demo order.');
+      setOrderItems(cartItems);
+      setOrderNumber(fallbackOrder.orderNumber);
+      onOrderPlaced(fallbackOrder);
+      setStep('placed');
+      onClearCart();
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (cartItems.length === 0 && step !== 'placed') {
@@ -1201,8 +1260,8 @@ function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
                 <button className="secondary-button" onClick={() => setStep('shipping')} type="button">
                   Back to Shipping
                 </button>
-                <button className="primary-button" type="submit">
-                  Place Demo Order
+                <button className="primary-button" disabled={isSubmitting} type="submit">
+                  {isSubmitting ? 'Placing Order...' : 'Place Demo Order'}
                 </button>
               </div>
             </form>
@@ -1213,6 +1272,7 @@ function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
               <div className="success-mark" aria-hidden="true">✓</div>
               <h3>Order placed successfully</h3>
               <p>Your TrustCart demo order has been reviewed and submitted.</p>
+              {checkoutError && <p className="checkout-warning">{checkoutError}</p>}
               <div className="order-number">
                 <span>Order number</span>
                 <strong>{orderNumber}</strong>
@@ -1258,6 +1318,74 @@ function CheckoutPage({ cartItems, onClearCart, onNavigate }) {
           </div>
         </aside>
       </div>
+    </section>
+  );
+}
+
+// Simple admin dashboard for reviewing orders placed through checkout.
+function AdminOrdersPage({ error, isLoading, onRefresh, orders }) {
+  return (
+    <section className="admin-section reveal" id="admin">
+      <div className="section-heading admin-heading">
+        <div>
+          <p className="mono-label">Admin dashboard</p>
+          <h2>Order review</h2>
+          <p>Track submitted orders and quickly spot risky products in each checkout.</p>
+        </div>
+        <button className="secondary-button" onClick={onRefresh} type="button">
+          Refresh Orders
+        </button>
+      </div>
+
+      {error && <p className="api-error">{error}</p>}
+      {isLoading && <p className="loading-message">Loading orders...</p>}
+
+      {!isLoading && orders.length === 0 && (
+        <div className="empty-state">
+          <h3>No orders yet.</h3>
+          <p>Place a demo checkout order, then return here to review it.</p>
+        </div>
+      )}
+
+      {!isLoading && orders.length > 0 && (
+        <div className="orders-grid" aria-label="Admin orders">
+          {orders.map((order) => {
+            var riskyCount = order.trustSummary ? order.trustSummary.riskyCount : 0;
+
+            return (
+              <article className="admin-order-card" key={order.id || order.orderNumber}>
+                <div className="admin-order-top">
+                  <div>
+                    <p className="mono-label">{order.status || 'Placed'}</p>
+                    <h3>{order.orderNumber}</h3>
+                    <span>{order.customer ? order.customer.name : 'Demo customer'}</span>
+                  </div>
+                  <strong>${order.totals ? Number(order.totals.total).toFixed(2) : '0.00'}</strong>
+                </div>
+
+                <div className="admin-risk-row">
+                  <span className="safe">Safe: {order.trustSummary ? order.trustSummary.safeCount : 0}</span>
+                  <span className="medium">Medium: {order.trustSummary ? order.trustSummary.mediumCount : 0}</span>
+                  <span className="risky">Risky: {riskyCount}</span>
+                </div>
+
+                <div className="admin-order-items">
+                  {(order.items || []).map((item) => (
+                    <div className={item.trustLabel === 'Risky' ? 'admin-order-item risky' : 'admin-order-item'} key={`${order.orderNumber}-${item.id}`}>
+                      <span>{item.name}</span>
+                      <strong>{item.trustLabel || getTrustLabel(getProductTrustScore(item))} ({item.trustScore || getProductTrustScore(item)})</strong>
+                    </div>
+                  ))}
+                </div>
+
+                {riskyCount > 0 && (
+                  <p className="checkout-warning">This order contains risky product signals.</p>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -1495,6 +1623,7 @@ function App() {
   const [theme, setTheme] = useStoredState('trustcart-theme', 'dark');
   const [wishlistIds, setWishlistIds] = useStoredState('trustcart-wishlist', []);
   const [cartItems, setCartItems] = useStoredState('trustcart-cart-items', []);
+  const [recentOrders, setRecentOrders] = useStoredState('trustcart-recent-orders', []);
 
   // Page state controls the current ecommerce flow.
   const [currentPage, setCurrentPage] = useState('home');
@@ -1513,6 +1642,9 @@ function App() {
   const [compareOpen, setCompareOpen] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [adminOrders, setAdminOrders] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState('');
 
   // Fetch products from the Express backend. Search text is sent to the API too.
   // Falls back to local mock data if the API is unreachable.
@@ -1606,6 +1738,13 @@ function App() {
     document.body.dataset.theme = theme;
   }, [theme]);
 
+  useEffect(() => {
+    if (currentPage === 'admin') {
+      fetchOrders();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
   // Short loading state makes filter/sort changes feel intentional.
   useEffect(() => {
     setIsLoading(true);
@@ -1683,6 +1822,36 @@ function App() {
 
   function clearCart() {
     setCartItems([]);
+  }
+
+  function addPlacedOrder(order) {
+    setRecentOrders((orders) => [order, ...orders.filter((item) => item.orderNumber !== order.orderNumber)].slice(0, 12));
+    setAdminOrders((orders) => [order, ...orders.filter((item) => item.orderNumber !== order.orderNumber)]);
+  }
+
+  function fetchOrders() {
+    setAdminLoading(true);
+    setAdminError('');
+
+    fetch(ORDERS_API_URL)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Orders API responded with status ' + response.status);
+        }
+
+        return response.json();
+      })
+      .then((orders) => {
+        var orderList = Array.isArray(orders) ? orders : [];
+
+        setAdminOrders(orderList.length > 0 ? orderList : recentOrders);
+      })
+      .catch((error) => {
+        console.warn('Orders API unavailable, using local recent orders. Error:', error.message);
+        setAdminOrders(recentOrders);
+        setAdminError('Showing local demo orders because the backend orders API is offline.');
+      })
+      .finally(() => setAdminLoading(false));
   }
 
   // Wishlist ids are stored instead of full product objects to avoid duplicated product data.
@@ -1827,7 +1996,18 @@ function App() {
         cartItems,
         onClearCart: clearCart,
         onNavigate: navigate,
+        onOrderPlaced: addPlacedOrder,
       });
+    }
+    if (currentPage === 'admin') {
+      return (
+        <AdminOrdersPage
+          error={adminError}
+          isLoading={adminLoading}
+          onRefresh={fetchOrders}
+          orders={adminOrders}
+        />
+      );
     }
     if (currentPage === 'details' && selectedProduct) {
       return (

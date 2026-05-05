@@ -159,6 +159,11 @@ var products = [
   },
 ];
 
+// In-memory order list for the demo checkout flow.
+// Later this can move to MongoDB without changing the frontend much.
+var orders = [];
+var nextOrderId = 1;
+
 // -----------------------------
 // Trust Score Logic
 // -----------------------------
@@ -191,6 +196,85 @@ function calculateTrustScore(product) {
   if (score < 0) score = 0;
 
   return score;
+}
+
+function getTrustLabel(score) {
+  if (score >= 80) return 'Safe';
+  if (score >= 50) return 'Medium';
+  return 'Risky';
+}
+
+function calculateOrderTotals(items) {
+  var subtotal = items.reduce(function (total, item) {
+    return total + Number(item.price || 0) * Number(item.quantity || 1);
+  }, 0);
+  var estimatedTax = subtotal * 0.08;
+  var shipping = subtotal === 0 || subtotal >= 250 ? 0 : 12;
+  var total = subtotal + estimatedTax + shipping;
+
+  return {
+    subtotal: Number(subtotal.toFixed(2)),
+    estimatedTax: Number(estimatedTax.toFixed(2)),
+    shipping: Number(shipping.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
+}
+
+function normalizeOrderItem(item) {
+  var product = {
+    id: item.id,
+    name: item.name || 'Unknown Product',
+    price: Number(item.price || 0),
+    avgPrice: Number(item.avgPrice || item.price || 0),
+    sellerRating: Number(item.sellerRating || 0),
+    reviews: Number(item.reviews || 0),
+    category: item.category || 'General',
+    image: item.image || getFallbackImage(item.category || 'General'),
+    description: item.description || 'TrustCart order item.',
+  };
+  var trustScore = Number(item.trustScore);
+
+  if (Number.isNaN(trustScore)) {
+    trustScore = calculateTrustScore(product);
+  }
+
+  return {
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    avgPrice: product.avgPrice,
+    sellerRating: product.sellerRating,
+    reviews: product.reviews,
+    category: product.category,
+    image: product.image,
+    description: product.description,
+    quantity: Math.max(1, Number(item.quantity || 1)),
+    trustScore: trustScore,
+    trustLabel: getTrustLabel(trustScore),
+  };
+}
+
+function summarizeOrderRisk(items) {
+  var safeCount = 0;
+  var mediumCount = 0;
+  var riskyCount = 0;
+
+  items.forEach(function (item) {
+    if (item.trustScore >= 80) safeCount = safeCount + 1;
+    else if (item.trustScore >= 50) mediumCount = mediumCount + 1;
+    else riskyCount = riskyCount + 1;
+  });
+
+  return {
+    safeCount: safeCount,
+    mediumCount: mediumCount,
+    riskyCount: riskyCount,
+    hasRiskyItems: riskyCount > 0,
+  };
+}
+
+function createOrderNumber() {
+  return 'TC-' + Date.now().toString().slice(-6) + '-' + nextOrderId;
 }
 
 function toTitleCase(text) {
@@ -375,6 +459,83 @@ app.get('/api/products', async function (req, res) {
   res.json(result);
 });
 
+// POST /api/orders
+// Stores a demo order in memory and returns a backend-generated order number.
+app.post('/api/orders', function (req, res) {
+  console.log('-------------------------------------------');
+  console.log('POST /api/orders called');
+
+  var customer = req.body.customer || {};
+  var items = Array.isArray(req.body.items) ? req.body.items : [];
+  var payment = req.body.payment || {};
+
+  if (!customer.name || !customer.email || !customer.address || !customer.city || !customer.postalCode) {
+    console.log('Order rejected: missing customer fields.');
+    return res.status(400).json({ message: 'Customer shipping details are required.' });
+  }
+
+  if (items.length === 0) {
+    console.log('Order rejected: empty cart.');
+    return res.status(400).json({ message: 'Order must include at least one item.' });
+  }
+
+  var orderItems = items.map(normalizeOrderItem);
+  var totals = calculateOrderTotals(orderItems);
+  var trustSummary = summarizeOrderRisk(orderItems);
+  var order = {
+    id: nextOrderId,
+    orderNumber: createOrderNumber(),
+    status: 'Placed',
+    createdAt: new Date().toISOString(),
+    customer: {
+      name: customer.name,
+      email: customer.email,
+      address: customer.address,
+      city: customer.city,
+      postalCode: customer.postalCode,
+    },
+    payment: {
+      method: 'Demo Card',
+      cardName: payment.cardName || customer.name,
+      cardLast4: payment.cardNumber ? String(payment.cardNumber).replace(/\s/g, '').slice(-4) : '4242',
+    },
+    items: orderItems,
+    totals: totals,
+    trustSummary: trustSummary,
+  };
+
+  orders.unshift(order);
+  nextOrderId = nextOrderId + 1;
+
+  console.log('Order stored: ' + order.orderNumber);
+  console.log('Total orders: ' + orders.length);
+  console.log('-------------------------------------------');
+
+  res.status(201).json(order);
+});
+
+// GET /api/orders
+// Returns the most recent demo orders for the admin dashboard.
+app.get('/api/orders', function (req, res) {
+  console.log('GET /api/orders called. Returning ' + orders.length + ' orders.');
+  res.json(orders);
+});
+
+// GET /api/orders/:id
+// Helpful for testing or future order detail pages.
+app.get('/api/orders/:id', function (req, res) {
+  var orderId = Number(req.params.id);
+  var order = orders.find(function (item) {
+    return item.id === orderId;
+  });
+
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found.' });
+  }
+
+  res.json(order);
+});
+
 // -----------------------------
 // Start Server
 // -----------------------------
@@ -384,5 +545,6 @@ app.listen(PORT, function () {
   console.log('  🛒  TrustCart server is running!');
   console.log('  🌐  http://localhost:' + PORT);
   console.log('  📦  Products API: http://localhost:' + PORT + '/api/products');
+  console.log('  🧾  Orders API:   http://localhost:' + PORT + '/api/orders');
   console.log('===========================================');
 });

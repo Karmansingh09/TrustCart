@@ -86,9 +86,51 @@ const headphoneProducts = [
 ];
 
 beforeEach(() => {
-  global.fetch = jest.fn((url) => {
+  const mockOrders = [];
+
+  global.fetch = jest.fn((url, options = {}) => {
     const urlText = String(url);
     let responseProducts = mockProducts;
+
+    if (urlText.includes('/api/orders') && options.method === 'POST') {
+      const requestBody = JSON.parse(options.body);
+      const newOrder = {
+        id: mockOrders.length + 1,
+        orderNumber: `TC-TEST-${mockOrders.length + 1}`,
+        status: 'Placed',
+        createdAt: '2026-05-05T00:00:00.000Z',
+        customer: requestBody.customer,
+        items: requestBody.items.map((item) => ({
+          ...item,
+          trustLabel: item.trustScore >= 80 ? 'Safe' : item.trustScore >= 50 ? 'Medium' : 'Risky',
+        })),
+        totals: {
+          subtotal: 899,
+          estimatedTax: 71.92,
+          shipping: 0,
+          total: 970.92,
+        },
+        trustSummary: {
+          safeCount: 1,
+          mediumCount: 0,
+          riskyCount: 0,
+        },
+      };
+
+      mockOrders.unshift(newOrder);
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(newOrder),
+      });
+    }
+
+    if (urlText.includes('/api/orders')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockOrders),
+      });
+    }
 
     if (urlText.includes('search=headphones')) {
       responseProducts = headphoneProducts;
@@ -357,7 +399,13 @@ test('completes the demo checkout flow', async () => {
   fireEvent.change(screen.getByLabelText(/expiry/i), { target: { value: '12/30' } });
   fireEvent.click(screen.getByRole('button', { name: /place demo order/i }));
 
-  expect(screen.getByRole('heading', { name: /order placed successfully/i })).toBeInTheDocument();
-  expect(screen.getByText(/TC-/i)).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: /order placed successfully/i })).toBeInTheDocument();
+  expect(screen.getByText(/TC-TEST-1/i)).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /cart \(0\)/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('link', { name: /^admin$/i }));
+
+  expect(await screen.findByRole('heading', { name: /order review/i })).toBeInTheDocument();
+  expect(await screen.findByText(/TC-TEST-1/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/admin orders/i)).toBeInTheDocument();
 });

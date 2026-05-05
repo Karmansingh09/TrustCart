@@ -224,6 +224,7 @@ select:focus-visible {
 .catalog-section,
 .cart-section,
 .checkout-section,
+.admin-section,
 .detail-section,
 .wishlist-section,
 .calculator-section,
@@ -237,6 +238,7 @@ select:focus-visible {
 .catalog-section,
 .cart-section,
 .checkout-section,
+.admin-section,
 .detail-section,
 .wishlist-section,
 .calculator-section,
@@ -357,6 +359,7 @@ select:focus-visible {
 .cart-item,
 .order-summary,
 .checkout-panel,
+.admin-order-card,
 .calculator-grid,
 .empty-state,
 .compare-modal,
@@ -1752,6 +1755,103 @@ select:focus-visible {
   font-size: 1.35rem;
 }
 
+/* Admin order review dashboard. */
+.admin-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: none;
+}
+
+.orders-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-order-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 14%, transparent), transparent 30%),
+    color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.admin-order-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-order-top h3 {
+  margin: 8px 0 4px;
+  color: var(--text);
+  font-size: 1.45rem;
+}
+
+.admin-order-top span,
+.admin-order-items span {
+  color: var(--muted);
+}
+
+.admin-order-top > strong {
+  color: var(--text);
+  font-size: 1.6rem;
+}
+
+.admin-risk-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-risk-row span {
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.admin-risk-row .safe {
+  background: #2ecc71;
+}
+
+.admin-risk-row .medium {
+  background: #f39c12;
+}
+
+.admin-risk-row .risky {
+  background: #e74c3c;
+}
+
+.admin-order-items {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-order-item.risky {
+  border-color: rgba(248, 113, 113, 0.36);
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.admin-order-item strong {
+  color: var(--text);
+}
+
 /* Comparison modal and table. */
 .modal-backdrop {
   position: fixed;
@@ -2101,6 +2201,7 @@ select:focus-visible {
   .catalog-section,
   .cart-section,
   .checkout-section,
+  .admin-section,
   .detail-section,
   .wishlist-section,
   .calculator-section,
@@ -2125,6 +2226,7 @@ select:focus-visible {
   .hero-panel-header,
   .cart-heading,
   .checkout-heading,
+  .admin-heading,
   .testimonial-top {
     align-items: start;
     grid-template-columns: 1fr;
@@ -2161,6 +2263,20 @@ select:focus-visible {
   }
 
   .checkout-heading {
+    flex-direction: column;
+  }
+
+  .admin-heading,
+  .admin-order-top {
+    flex-direction: column;
+  }
+
+  .admin-risk-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-order-item {
+    align-items: flex-start;
     flex-direction: column;
   }
 
